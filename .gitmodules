@@ -1,0 +1,6 @@
+[submodule "bots/winner_bots/eleventh_place"]
+	path = bots/winner_bots/eleventh_place
+	url = https://github.com/a1k0n/ants
+[submodule "bots/winner_bots/first_place"]
+	path = bots/winner_bots/first_place
+	url = https://github.com/xathis/AI-Challenge-2011-bot

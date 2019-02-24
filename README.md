@@ -1,27 +1,21 @@
-AI Challenge Source Code Repository
-===================================
+# Ants Challenge
 
-*Codename: Epsilon*
+This repo modifies the Fall 2011 [AI Challenge](https://github.com/aichallenge/aichallenge). The repo only contains code needed to run the ants game (and hence the website and competition code has been removed).
 
-This code provides the basis for the Fall 2011 [AI Challenge](http://aichallenge.org/).
-Epsilon is supposed to implement the ants game.
-
-Folder Contents
----------------
+## Folder Contents
 
 * `ants/` - Everything related to ants: engine, starter packages, maps/mapgen, visualizer
-* `integration_testing` - Anything related to testing/stress-testing the contest setup
-* `manager/` - Tournament manager which coordinates the workers and computes skill ratings
 * `worker/` - Standalone workers which run games (including compiler and sandbox)
-* `sql/` - Files for creating an empty sql database
-* `website/` - Main website and frontend
+* `bots/` - Code for existing bots (including starter bots, example bots, and some competition winner bots)
 
-Initializing the git submodules:
+## Competition bots
+
+Some bots which competed in the Fall 2011 competition have been added as submodules in the `bots\winner_bots` folder. To initialize the git submodules run:
 
 * `git submodule init`
 * `git submodule update`
 
-Installation
----------------
+Explanation for these bots:
 
-Follow [INSTALL.md](https://github.com/aichallenge/aichallenge/blob/epsilon/INSTALL.md).
+* [xathis - First Place](https://web.archive.org/web/20120215072119/http://xathis.com/posts/ai-challenge-2011-ants.html)
+* [a1k0n - Eleventh Place](https://www.a1k0n.net/2010/03/04/google-ai-postmortem.html)
