@@ -254,6 +254,8 @@ def run_game(game, botcmds, options):
                 verbose_log.write(s)
                 for key in stat_keys:
                     values = stats[key]
+                    if values is None:
+                        continue
                     if type(values) == list:
                         values = '[' + ','.join(map(str,values)) + ']'
                     verbose_log.write(' {0:^{1}}'.format(values, max(len(key), len(str(values)))))

@@ -54,11 +54,11 @@ class SymmetricMap():
 
     #outputs the map
     def print_map(self):
-        print "rows", self.rows
-        print "cols", self.cols
-        print "players", self.no_players
+        print("rows", self.rows)
+        print("cols", self.cols)
+        print("players", self.no_players)
         for row in self.map_data:
-            print 'm', ''.join(row)
+            print('m', ''.join(row))
 
     #picks the dimensions of the map
     def pick_dimensions(self):
