@@ -148,7 +148,7 @@ class Ants(Game):
             self.original_map = []
             for map_row in self.map:
                 self.original_map.append(map_row[:])
-                
+
         # initialize scores
         # points start at # of hills to prevent negative scores
         self.score = [len(map_data['hills'][0])]*self.num_players
@@ -179,7 +179,7 @@ class Ants(Game):
 
         # the engine may kill players before the game starts and this is needed to prevent errors
         self.orders = [[] for i in range(self.num_players)]
-        
+
 
     def distance(self, a_loc, b_loc):
         """ Returns distance between x and y squared """
@@ -777,7 +777,7 @@ class Ants(Game):
         self.all_ants.append(ant)
         self.current_ants[loc] = ant
         return ant
-    
+
     def kill_ant(self, ant, ignore_error=False):
         """ Kill the ant at the given location
 
@@ -928,7 +928,7 @@ class Ants(Game):
 
         # setup done - start the killing
         for distance in range(1, self.attackradius):
-            for ant in self.current_ants.values():
+            for ant in list(self.current_ants.values()):
                 if not ants_by_distance[ant] or ant.killed:
                     continue
 
@@ -1441,7 +1441,7 @@ class Ants(Game):
                 self.score[player] += self.bonus[player]
 
         self.calc_significant_turns()
-        
+
         # check if a rule change lengthens games needlessly
         if self.cutoff is None:
             self.cutoff = 'turn limit reached'

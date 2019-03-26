@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from random import choice, randrange
-from ants import *
+from sample_game import *
 import sys
 import logging
 from optparse import OptionParser
@@ -10,10 +10,11 @@ class LeftyBot:
         self.ants_straight = {}
         self.ants_lefty = {}
 
-    def do_turn(self, ants):
+    def do_turn(self, ants, print_to_std_out=True):
         destinations = []
         new_straight = {}
         new_lefty = {}
+        orders = []
         for a_row, a_col in ants.my_ants():
             # send new ants in a straight line
             if (not (a_row, a_col) in self.ants_straight and
@@ -37,7 +38,7 @@ class LeftyBot:
                 if ants.passable(n_row, n_col):
                     if (ants.unoccupied(n_row, n_col) and
                             not (n_row, n_col) in destinations):
-                        ants.issue_order((a_row, a_col, direction))
+                        orders.append(ants.issue_order((a_row, a_col, direction), print_to_std_out))
                         new_straight[(n_row, n_col)] = direction
                         destinations.append((n_row, n_col))
                     else:
@@ -58,7 +59,7 @@ class LeftyBot:
                     if ants.passable(n_row, n_col):
                         if (ants.unoccupied(n_row, n_col) and
                                 not (n_row, n_col) in destinations):
-                            ants.issue_order((a_row, a_col, new_direction))
+                            orders.append(ants.issue_order((a_row, a_col, new_direction), print_to_std_out))
                             new_lefty[(n_row, n_col)] = new_direction
                             destinations.append((n_row, n_col))
                             break
@@ -71,6 +72,7 @@ class LeftyBot:
         # reset lists
         self.ants_straight = new_straight
         self.ants_lefty = new_lefty
+        return orders
 
 if __name__ == '__main__':
     try:
@@ -79,7 +81,6 @@ if __name__ == '__main__':
     except ImportError:
         pass
     try:
-        Ants.run(LeftyBot())
+        Game.run(LeftyBot())
     except KeyboardInterrupt:
         print('ctrl-c, leaving ...')
-        

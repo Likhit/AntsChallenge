@@ -1,10 +1,10 @@
 #!/usr/bin/env python
-from ants import *
+from sample_game import *
 
 # define a class with a do_turn method
 # the Ants.run method will parse and update bot input
 # it will also run the do_turn method for us
-class MyBot:
+class TestBot:
     def __init__(self):
         # define class level variables, will be remembered between turns
         pass
@@ -19,9 +19,10 @@ class MyBot:
     # do turn is run once per turn
     # the ants class has the game state and is updated by the Ants.run method
     # it also has several helper methods to use
-    def do_turn(self, ants):
+    def do_turn(self, ants, print_to_std_out=True):
         # loop through all my ants and try to give them orders
         # the ant_loc is an ant location tuple in (row, col) form
+        orders = []
         for ant_loc in ants.my_ants():
             # try all directions in given order
             directions = ('n','e','s','w')
@@ -32,9 +33,11 @@ class MyBot:
                 # passable returns true if the location is land
                 if (ants.passable(*new_loc)):
                     # an order is the location of a current ant and a direction
-                    ants.issue_order((*ant_loc, direction))
+                    order = ants.issue_order((*ant_loc, direction), print_to_std_out)
+                    orders.append(order)
                     # stop now, don't give 1 ant multiple orders
                     break
+        return orders
 
 if __name__ == '__main__':
     # psyco will speed up python a little, but is not needed
@@ -48,6 +51,6 @@ if __name__ == '__main__':
         # if run is passed a class with a do_turn method, it will do the work
         # this is not needed, in which case you will need to write your own
         # parsing function and your own game state class
-        Ants.run(MyBot())
+        Game.run(MyBot())
     except KeyboardInterrupt:
         print('ctrl-c, leaving ...')

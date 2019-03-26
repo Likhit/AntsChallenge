@@ -7,7 +7,7 @@ try:
     from sys import maxint
 except ImportError:
     from sys import maxsize as maxint
-        
+
 MY_ANT = 0
 ANTS = 0
 DEAD = -1
@@ -41,7 +41,7 @@ BEHIND = {'n': 's',
           'e': 'w',
           'w': 'e'}
 
-class Ants():
+class Game():
     def __init__(self):
         self.width = None
         self.height = None
@@ -120,10 +120,15 @@ class Ants():
                         owner = int(tokens[3])
                         self.hill_list[(row, col)] = owner
 
-    def issue_order(self, order):
-        sys.stdout.write('o %s %s %s\n' % (order[0], order[1], order[2]))
-        sys.stdout.flush()
-        
+    def issue_order(self, order, to_std_out=True):
+        'issue an order by writing the proper ant location and direction'
+        row, col, direction = order
+        order = 'o %s %s %s\n' % (row, col, direction)
+        if to_std_out:
+            sys.stdout.write(order)
+            sys.stdout.flush()
+        return order
+
     def finish_turn(self):
         sys.stdout.write('go\n')
         sys.stdout.flush()
@@ -135,7 +140,7 @@ class Ants():
     def enemy_ants(self):
         return [(loc, owner) for loc, owner in self.ant_list.items()
                     if owner != MY_ANT]
-    
+
     def my_hills(self):
         return [loc for loc, owner in self.hill_list.items()
                     if owner == MY_ANT]
@@ -143,19 +148,19 @@ class Ants():
     def enemy_hills(self):
         return [(loc, owner) for loc, owner in self.hill_list.items()
                     if owner != MY_ANT]
-        
+
     def food(self):
         return self.food_list[:]
 
     def passable(self, row, col):
         return self.map[row][col] != WATER
-    
+
     def unoccupied(self, row, col):
         return self.map[row][col] in (LAND, DEAD, UNSEEN)
 
     def destination(self, row, col, direction):
         d_row, d_col = AIM[direction]
-        return ((row + d_row) % self.height, (col + d_col) % self.width)        
+        return ((row + d_row) % self.height, (col + d_col) % self.width)
 
     def distance(self, row1, col1, row2, col2):
         row1 = row1 % self.height
@@ -204,7 +209,7 @@ class Ants():
                 if dist<min_dist:
                     min_dist = dist
                     closest_food = food
-        return closest_food    
+        return closest_food
 
     def closest_enemy_ant(self,row1,col1,filter=None):
         #find the closest enemy ant from this row/col
@@ -216,7 +221,7 @@ class Ants():
                 if dist<min_dist:
                     min_dist = dist
                     closest_ant = ant[0]
-        return closest_ant    
+        return closest_ant
 
     def closest_enemy_hill(self,row1,col1,filter=None):
         #find the closest enemy hill from this row/col
@@ -228,7 +233,7 @@ class Ants():
                 if dist<min_dist:
                     min_dist = dist
                     closest_hill = hill[0]
-        return closest_hill   
+        return closest_hill
 
     def closest_unseen(self,row1,col1,filter=None):
         #find the closest unseen from this row/col
@@ -252,7 +257,7 @@ class Ants():
 
     @staticmethod
     def run(bot):
-        ants = Ants()
+        ants = Game()
         map_data = ''
         while(True):
             try:

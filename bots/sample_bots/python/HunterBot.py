@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 from random import shuffle
-from ants import *
+from sample_game import *
 
 class HunterBot():
-    def do_turn(self, ants):
+    def do_turn(self, ants, print_to_std_out=True):
         destinations = []
+        orders = []
         for a_row, a_col in ants.my_ants():
             targets = ants.food() + [(row, col) for (row, col), owner in ants.enemy_ants()]
             # find closest food or enemy ant
@@ -25,11 +26,13 @@ class HunterBot():
                 n_row, n_col = ants.destination(a_row, a_col, direction)
                 if ants.unoccupied(n_row, n_col) and not (n_row, n_col) in destinations:
                     destinations.append((n_row, n_col))
-                    ants.issue_order((a_row, a_col, direction))
+                    order = ants.issue_order((a_row, a_col, direction), print_to_std_out)
+                    orders.append(order)
                     break
             else:
                 # mark ant as not moving so we don't run into it
                 destinations.append((a_row, a_col))
+        return orders
 
 if __name__ == '__main__':
     try:
@@ -38,6 +41,6 @@ if __name__ == '__main__':
     except ImportError:
         pass
     try:
-        Ants.run(HunterBot())
+        Game.run(HunterBot())
     except KeyboardInterrupt:
         print('ctrl-c, leaving ...')

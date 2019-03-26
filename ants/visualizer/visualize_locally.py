@@ -26,7 +26,7 @@ def generate(data, generated_path):
     newline_re = re.compile("\s", re.MULTILINE)
     insert_re = re.compile(r"## REPLAY PLACEHOLDER ##")
     path_re = re.compile(r"## PATH PLACEHOLDER ##")
-    
+
     try:
         json.loads(data)
         data = quote_re.sub(r"\\\\'", data)
@@ -35,29 +35,31 @@ def generate(data, generated_path):
         data = data.replace('\n', '\\\\n')
 
     content = path_re.sub(mod_path, content)
-    content = insert_re.sub(data, content)   
-       
+    content = insert_re.sub(data, content)
+
     output = open(generated_path, 'w')
     output.write(content)
     output.close()
 
-def launch(filename=None, nolaunch=False, generated_path=None):
+def launch(filename=None, nolaunch=False, generated_path=None, game_result_json=None):
     if generated_path == None:
         generated_path = 'replay.html'
-    if filename == None:
+    if filename is None and game_result_json is None:
         data = sys.stdin.read()
         generated_path = os.path.realpath(os.path.join(os.path.dirname(__file__)
                                                        , generated_path))
-    else:
+    elif filename:
         with open(filename, 'r') as f:
             data = f.read()
         generated_path = os.path.join(os.path.split(filename)[0], generated_path)
+    else:
+        data = game_result_json
 
     generate(data, generated_path)
 
     # open the page in the browser
     if not nolaunch:
-        webbrowser.open('file://'+os.path.realpath(generated_path))    
+        webbrowser.open('file://'+os.path.realpath(generated_path))
 
 if __name__ == "__main__":
     launch(nolaunch=len(sys.argv) > 1 and sys.argv[1] == '--nolaunch')

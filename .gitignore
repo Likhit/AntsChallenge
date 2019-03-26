@@ -128,3 +128,5 @@ dmypy.json
 # Ignore vscode folder
 .vscode
 .vscode/**
+
+**replay.html
