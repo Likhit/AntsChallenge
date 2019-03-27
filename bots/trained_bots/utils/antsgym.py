@@ -1,10 +1,11 @@
-import abc
 import json
 import os
 import sys
 
 import gym
 import numpy as np
+
+from .enemybots import SampleBots
 
 ANTS_MODULE = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
@@ -16,23 +17,6 @@ try:
     import visualizer.visualize_locally as visualizer
 except ImportError as e:
     print(f'Ants module not found in {ANTS_MODULE}')
-    raise e
-
-SAMPLE_BOTS_MODULE = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)),
-    '../../sample_bots/python'
-)
-sys.path.append(SAMPLE_BOTS_MODULE)
-try:
-    import sample_game as sample_bot_game
-    import ErrorBot as error_bot
-    import GreedyBot as greedy_bot
-    import HunterBot as hunter_bot
-    import LeftyBot as lefty_bot
-    import RandomBot as random_bot
-    import TestBot as test_bot
-except ImportError as e:
-    print(f'Module not found in {SAMPLE_BOTS_MODULE}')
     raise e
 
 class AntsEnvOptions(object):
@@ -182,59 +166,6 @@ class AntsEnvOptions(object):
         self.scenario = scenario
         return self
 
-
-class Bot(abc.ABC):
-    def __init__(self, name):
-        self.name = name
-
-    @abc.abstractmethod
-    def setup(self, map_data):
-        pass
-
-    @abc.abstractmethod
-    def update_map(self, map_data):
-        pass
-
-    @abc.abstractmethod
-    def get_moves(self):
-        pass
-
-class SampleBots(Bot):
-    def __init__(self, name, bot):
-        super().__init__(name)
-        self.ants = sample_bot_game.Game()
-        self.bot = bot
-
-    def setup(self, map_data):
-        self.ants.setup(map_data)
-        return self
-
-    def update_map(self, map_data):
-        self.ants.update(map_data)
-        return self
-
-    def get_moves(self):
-        return self.bot.do_turn(self.ants, False)
-
-    @staticmethod
-    def random_bot():
-        return SampleBots('RandomBot', random_bot.RandomBot())
-
-    @staticmethod
-    def greedy_bot():
-        return SampleBots('GreedyBot', greedy_bot.GreedyBot())
-
-    @staticmethod
-    def hunter_bot():
-        return SampleBots('HunterBot', hunter_bot.HunterBot())
-
-    @staticmethod
-    def lefty_bot():
-        return SampleBots('LeftyBot', lefty_bot.LeftyBot())
-
-    @staticmethod
-    def test_bot():
-        return SampleBots('TestBot', test_bot.TestBot())
 
 class AntsEnv(gym.Env):
     """
@@ -407,11 +338,14 @@ class AntsEnv(gym.Env):
         return moves
 
 def test():
-    map_file = '../../../ants/maps/cell_maze/cell_maze_p05_04.map'
+    map_file = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        '../../../ants/maps/cell_maze/cell_maze_p06_04.map'
+    )
     #map_file = '../../../ants/maps/example/tutorial1.map'
     opts = AntsEnvOptions()                     \
         .set_map_file(map_file)                 \
-        .set_turns(2000)                        \
+        .set_turns(500)                         \
         .set_view_radius_sq(81)                 \
         .set_attack_radius_sq(7)                \
         .set_consumption_radius_sq(3)           \
@@ -425,9 +359,9 @@ def test():
 
     agent = SampleBots.random_bot()
     enemies = [
-        SampleBots.random_bot(), #SampleBots.greedy_bot(),
-        SampleBots.hunter_bot(),
-        SampleBots.lefty_bot(), SampleBots.test_bot()
+        SampleBots.random_bot(), SampleBots.greedy_bot(),
+        SampleBots.hunter_bot(), SampleBots.lefty_bot(),
+        SampleBots.test_bot()
     ]
     env = AntsEnv(opts, enemies)
 
@@ -451,7 +385,8 @@ def test():
             action[row, col] = direction
         state, reward, done, info = env.step(action)
         turns += 1
-        print(f'Ran for {turns} turns.')
+        if turns % 10 == 0:
+            print(f'Ran for {turns} turns.')
         if done:
             print(info)
             break
