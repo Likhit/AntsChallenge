@@ -82,7 +82,7 @@ class RewardFunc(abc.ABC):
     calculates the reward per turn.
     """
     @abc.abstractmethod
-    def calculate_reward(self, reward_inputs):
+    def _calculate_reward(self, reward_inputs):
         """
         Calculates reward with custom logic based on the input.
 
@@ -96,6 +96,14 @@ class RewardFunc(abc.ABC):
         """
         pass
 
+    def __call__(self, reward_inputs):
+        """
+        Calculates the net reward against the input using
+        _calculate_reward.
+        """
+        return self._calculate_reward(reward_inputs)
+
+
 class ScoreFunc(RewardFunc):
     """
     Reward is the difference between the score in the current step
@@ -104,7 +112,7 @@ class ScoreFunc(RewardFunc):
     def __init__(self):
         self._old_score = 0
 
-    def calculate_reward(self, reward_inputs):
+    def _calculate_reward(self, reward_inputs):
         diff = reward_inputs.score - self._old_score
         self._old_score = reward_inputs.score
         return diff
@@ -119,7 +127,7 @@ class FoodScoreFunc(RewardFunc):
         self.food_weight = food_weight
         self.score_weight = score_weight
 
-    def calculate_reward(self, reward_inputs):
-        diff = self.score_func.calculate_reward(reward_inputs)
+    def _calculate_reward(self, reward_inputs):
+        diff = self.score_func(reward_inputs)
         return self.food_weight * reward_inputs.food_consumed \
             + self.score_weight * diff

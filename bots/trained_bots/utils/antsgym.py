@@ -280,7 +280,7 @@ class AntsEnv(gym.Env):
         reward_inputs.dead_ants = dead_ants
         reward_inputs.food_consumed = self.game.hive_food[AntsEnv.AGENT_PLAYER_NUM]
         reward_inputs.score = self.game.score[AntsEnv.AGENT_PLAYER_NUM]
-        reward = self.reward_func.calculate_reward(reward_inputs)
+        reward = self.reward_func(reward_inputs)
 
         return self._current_state, reward, self.is_done, info
 
@@ -424,4 +424,5 @@ def test():
     return env
 
 if __name__ == '__main__':
-    test()
+    env = test()
+    env.visualize()
