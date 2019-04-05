@@ -96,6 +96,13 @@ class RewardFunc(abc.ABC):
         """
         pass
 
+    @abc.abstractmethod
+    def reset(self):
+        """
+        Called when the environment is reset.
+        """
+        pass
+
     def __call__(self, reward_inputs):
         """
         Calculates the net reward against the input using
@@ -110,7 +117,10 @@ class ScoreFunc(RewardFunc):
     and the previous step.
     """
     def __init__(self):
-        self._old_score = 0
+        self.reset()
+
+    def reset(self):
+        self._old_score = 1 # Score starts at 1 (# of hills).
 
     def _calculate_reward(self, reward_inputs):
         diff = reward_inputs.score - self._old_score
@@ -126,6 +136,9 @@ class FoodScoreFunc(RewardFunc):
         self.score_func = ScoreFunc()
         self.food_weight = food_weight
         self.score_weight = score_weight
+
+    def reset(self):
+        self.score_func.reset()
 
     def _calculate_reward(self, reward_inputs):
         diff = self.score_func(reward_inputs)

@@ -181,7 +181,7 @@ class AntsEnv(gym.Env):
 
     Properties:
         - observation_space: Box of shape (4 + num_players,
-            game_hight, game_width) of type np.int8. Most cell
+            game_hight, game_width) of type np.uint8. Most cell
             values are 0, or 1 to represent True, or False
             respectively. There are (4 + num_player) channels for
             the following:
@@ -215,6 +215,7 @@ class AntsEnv(gym.Env):
     ENEMY_ANTS_CHANNEL_START = 5
 
     # Action types
+    NUM_ACTIONS = 5
     DONT_MOVE = 0
     MOVE_NORTH = 1
     MOVE_EAST = 2
@@ -231,8 +232,8 @@ class AntsEnv(gym.Env):
         self.enemies = enemies
         self.reward_func = reward_func
         self.game = Ants(self.game_opts.as_dict())
-        self.observation_space = gym.spaces.Box(low=0, high=1, shape=(4 + self.game.num_players, self.game.height, self.game.width), dtype=np.int8)
-        self.action_space = gym.spaces.Box(low=0, high=4, shape=(self.game.height, self.game.width), dtype=np.int8)
+        self.observation_space = gym.spaces.Box(low=0, high=1, shape=(4 + self.game.num_players, self.game.height, self.game.width), dtype=np.uint8)
+        self.action_space = gym.spaces.Box(low=0, high=4, shape=(self.game.height, self.game.width), dtype=np.uint8)
         self.reset(self.game)
 
     def step(self, action):
@@ -285,6 +286,7 @@ class AntsEnv(gym.Env):
         return self._current_state, reward, self.is_done, info
 
     def reset(self, init_game=None):
+        self.reward_func.reset()
         self.game = init_game or Ants(self.game_opts.as_dict())
         self.is_done = False
         self._current_state = None
@@ -365,6 +367,8 @@ class AntsEnv(gym.Env):
                     moves.append(f'o {row} {col} s')
                 elif action[row, col] == AntsEnv.MOVE_WEST:
                     moves.append(f'o {row} {col} w')
+                else:
+                    raise ValueError(f'action[{row}, {col}] = {action[row, col]} is not a valid move.')
         return moves
 
 def test():
