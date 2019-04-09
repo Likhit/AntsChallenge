@@ -23,7 +23,7 @@ class Bot(abc.ABC):
     Interface to implement for an enemy bot used in a gym
     environment for the Ants game.
 
-    Attributes:
+    Args:
         - name (str): The name of the bot that is displayed in the visualization.
     """
     def __init__(self, name):
@@ -59,7 +59,7 @@ class SampleBots(Bot):
     """
     Implementation of the Bot interface for the sample bots.
 
-    Attributes:
+    Args:
         - name (str): The name of the bot.
         - bot: Instance of the sample bot.
     """

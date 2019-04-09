@@ -65,8 +65,8 @@ class Net1(nn.Module):
         view_radius = int(self.env.game_opts.view_radius_sq ** 0.5)
 
         self.zero_pad = nn.ZeroPad2d(view_radius)
-        shape = (obs_shape[1] + 2 * view_radius, obs_shape[2] + 2 * view_radius)
-        self.conv1 = nn.Conv2d(obs_shape[0], 64, view_radius)
+        shape = (obs_shape[2] + 2 * view_radius, obs_shape[3] + 2 * view_radius)
+        self.conv1 = nn.Conv2d(obs_shape[1], 64, view_radius)
         shape = conv_output_shape(shape, view_radius)
         self.pool1 = nn.MaxPool2d(4, stride=1)
         shape = conv_output_shape(shape, 4)
@@ -79,7 +79,7 @@ class Net1(nn.Module):
         # shape = conv_output_shape(shape, 3)
         #
         # self.hidden_in = 16 * shape[0] * shape[1]
-        # out = act_shape[0] * act_shape[1]
+        # out = act_shape[1] * act_shape[2]
         # if self.hidden is None:
         #     self.hidden = [2 * out, int(out * 1.5)]
 
@@ -142,7 +142,7 @@ class Trainer(object):
             .set_scenario(True)
 
         enemies = [utils.enemybots.SampleBots.random_bot()]
-        reward_func = utils.reward.FoodScoreFunc(score_weight=100)
+        reward_func = utils.reward.FoodFunc()
         env = utils.antsgym.AntsEnv(opts, enemies, reward_func)
         return env
 
@@ -153,11 +153,11 @@ class Trainer(object):
             state, turn, is_done = self.env.reset(), 0, False
             self.optim.zero_grad()
             while not is_done:
-                t_state = torch.tensor([state], dtype=torch.float32, device=self.device)
+                t_state = torch.tensor(state, dtype=torch.float32, device=self.device)
                 action_probs = self.net(t_state)
                 action = torch.distributions.Categorical(
                     probs=action_probs.permute(0, 2, 3, 1)
-                ).sample()[0]
+                ).sample()
 
                 n_state, reward, is_done, info = self.env.step(action)
 
@@ -182,18 +182,15 @@ class Trainer(object):
         return -prod.sum(1).mean(0).sum()
 
     def _get_target(self, action_taken, state, reward, info):
-        target = torch.zeros(*(1, self.env.NUM_ACTIONS, *action_taken.shape), dtype=torch.float32, device=self.device)
-        for row in range(action_taken.shape[0]):
-            for col in range(action_taken.shape[1]):
-                if state[self.env.AGENT_ANTS_CHANNEL, row, col] != 1:
-                    target[0, self.env.DONT_MOVE, row, col] = 1
+        target = torch.zeros(*(1, self.env.NUM_ACTIONS, *action_taken.shape[1:]), dtype=torch.float32, device=self.device)
+        for row in range(action_taken.shape[1]):
+            for col in range(action_taken.shape[2]):
+                if info['reward_inputs'].ignored_moves[0][row, col] != 0:
+                    target[0, action_taken[0, row, col], row, col] = -1
+                if state[0, self.env.CHANNEL_AGENT_ANT, row, col] != 1:
+                    target[0, self.env.ACTION_DONT_MOVE, row, col] = 1
                 else:
-                    num_agent_ants = np.count_nonzero(state[self.env.AGENT_ANTS_CHANNEL] == 1)
-                    target[0, action_taken[row, col], row, col] = reward / num_agent_ants
-        for line in info.get(self.env.INFO_AGENT_IGNORED_MOVES, []):
-            tokens = line.strip().split()
-            row, col = int(tokens[1]), int(tokens[2])
-            target[0, action_taken[row, col], row, col] = -1
+                    target[0, action_taken[0, row, col], row, col] = info['food_distr'][0, 0, row, col]
         return F.softmax(target, dim=1)
 
 def test(map_file, num_episodes, lr):
