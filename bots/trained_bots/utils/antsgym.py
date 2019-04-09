@@ -5,7 +5,7 @@ import sys
 import gym
 import numpy as np
 
-from .enemybots import SampleBots
+from .enemybots import Bot, SampleBots
 from .reward import RewardInputs, FoodScoreFunc
 
 ANTS_MODULE = os.path.join(
@@ -178,25 +178,30 @@ class AntsEnv(gym.Env):
         - enemies ([Bot]): A list of enemy bots.
         - reward_func (RewardFunc): A RewardFunc object to
             calculate the reward at each step.
+        - agent_names ([str]): A list of names for each agent.
 
     Properties:
-        - observation_space: Box of shape (4 + num_players,
-            game_hight, game_width) of type np.uint8. Most cell
-            values are 0, or 1 to represent True, or False
-            respectively. There are (4 + num_player) channels for
-            the following:
+        - observation_space: Box of shape (n, 4 + num_players,
+            game_hight, game_width) of type np.uint8 where n is
+            the number of agents. Most cell values are 0, or 1
+            to represent True, or False respectively. There are
+            (4 + num_player) channels for the following:
                 - Channel 0: If the cell is visible to the agent.
                 - Channel 1: If the cell is land (else water).
                 - Channel 2: If the cell has food.
                 - Channel 3: If the cell has the agent's ant.
-                - Channel 4: 1 if the cell has the agent's ant
-                    hill. 2 if the cell has an enemy hill. Else 0.
+                - Channel 4: If the cell has an ant hill,
+                    then the player num (starting from 1) of the
+                    hill owner. Else 0.
+                - Channel 5: If the cell has an ant which died the
+                    previous turn, then the player num (starting
+                    from 1) of the dead ant. Else 0.
                 - Channel 5 and greater: If the cell has an enemy
                     ant (one channel per enemy player).
 
-        - action_space: Box of shape (game_height, game_width) of
-            with 0 <= cell value <= 4. The value represents the
-            move to make with the ant at each cell position:
+        - action_space: Box of shape (n, game_height, game_width)
+            with 0 <= cell value <= 4. 'n' is the number of agents. The cell value represents the move to make
+            with the ant at each cell position for each agent:
                 - 0: If the cell position has no player ants then
                     don't move.
                 - 1: Move 1 step north.
@@ -204,40 +209,52 @@ class AntsEnv(gym.Env):
                 - 3: Move 1 step south.
                 - 4: Move 1 step west.
     """
-    AGENT_PLAYER_NUM = 0    # NOTE: DO NOT CHANGE!!
-
     # Observation channels
-    IS_VISIBLE_CHANNEL = 0
-    IS_LAND_CHANNEL = 1
-    HAS_FOOD_CHANNEL = 2
-    ANT_HILL_CHANNEL = 3
-    AGENT_ANTS_CHANNEL = 4
-    ENEMY_ANTS_CHANNEL_START = 5
+    CHANNEL_IS_VISIBLE = 0
+    CHANNEL_IS_LAND = 1
+    CHANNEL_HAS_FOOD = 2
+    CHANNEL_ANT_HILL = 3
+    CHANNEL_AGENT_ANT = 4
+    CHANNEL_DEAD_ANTS = 5
+    CHANNEL_ENEMY_ANT_START = 6
 
     # Action types
     NUM_ACTIONS = 5
-    DONT_MOVE = 0
-    MOVE_NORTH = 1
-    MOVE_EAST = 2
-    MOVE_SOUTH = 3
-    MOVE_WEST = 4
+    ACTION_DONT_MOVE = 0
+    ACTION_MOVE_NORTH = 1
+    ACTION_MOVE_EAST = 2
+    ACTION_MOVE_SOUTH = 3
+    ACTION_MOVE_WEST = 4
 
     # Step info keys
     INFO_GAME_RESULT = 'game_result'
     INFO_AGENT_IGNORED_MOVES = 'agent_ignored_moves'
     INFO_AGENT_INVALID_MOVES = 'agent_invalid_moves'
 
-    def __init__(self, game_opts, enemies, reward_func):
+    def __init__(self, game_opts, enemies, reward_func, agent_names=None):
         self.game_opts = game_opts
         self.enemies = enemies
         self.reward_func = reward_func
         self.game = Ants(self.game_opts.as_dict())
-        self.observation_space = gym.spaces.Box(low=0, high=1, shape=(4 + self.game.num_players, self.game.height, self.game.width), dtype=np.uint8)
-        self.action_space = gym.spaces.Box(low=0, high=4, shape=(self.game.height, self.game.width), dtype=np.uint8)
+
+        if len(self.enemies) >= self.game.num_players:
+            raise ValueError('The number of enemies should be strictly less than the number of players. Otherwise there will be no agent to play against.')
+        self.num_agents = self.game.num_players - len(self.enemies)
+        if not agent_names:
+            self.agent_names = [f'Agent {i}' for i in range(self.num_agents)]
+        elif len(agent_names) != self.num_agents:
+            raise ValueError(f'len(agent_names) == {len(agent_names)} should be 0 or equal to the number of agents == {self.num_agents}.')
+        else:
+            self.agent_names = agent_names
+
+        self.observation_space = gym.spaces.Box(low=0, high=1, shape=(self.num_agents, 5 + self.game.num_players, self.game.height, self.game.width), dtype=np.uint8)
+        self.action_space = gym.spaces.Box(low=0, high=4, shape=(self.num_agents, self.game.height, self.game.width), dtype=np.uint8)
         self.reset(self.game)
 
     def step(self, action):
         info = {}
+        if action.shape != self.action_space.shape:
+            raise Exception(f'Shape of action {action.shape} should be same as shape of action space {self.action_space.shape}')
         if self.is_done:
             raise Exception("Can't make moves on a game that has finished. Reset board to continue.")
         # Play moves for each bot in a random order
@@ -245,18 +262,15 @@ class AntsEnv(gym.Env):
         self.game.start_turn()
         player_order = list(range(self.game.num_players))
         np.random.shuffle(player_order)
-        for index in player_order:
-            if index == 0:
-                player_num = AntsEnv.AGENT_PLAYER_NUM
-                moves = self._action_to_moves(action)
+        for player_num in player_order:
+            if 0 <= player_num < self.num_agents:
+                moves = self._action_to_moves(action[player_num])
             else:
-                player_num = index
-                enemy_ind = index - 1
+                enemy_ind = player_num - self.num_agents
                 if not self.game.is_alive(player_num): continue
                 moves = self.enemies[enemy_ind].get_moves()
-
             valid, ignored, invalid = self.game.do_moves(player_num, moves)
-            if index == 0:
+            if 0 <= player_num < self.num_agents:
                 info[AntsEnv.INFO_AGENT_IGNORED_MOVES] = ignored
                 info[AntsEnv.INFO_AGENT_INVALID_MOVES] = invalid
         self.game.finish_turn()
@@ -267,10 +281,10 @@ class AntsEnv(gym.Env):
             info[AntsEnv.INFO_GAME_RESULT] = self.get_game_result()
 
         for i, enemy in enumerate(self.enemies):
-            player_num = i + 1
+            player_num = i + self.num_agents
             if self.game.is_alive(player_num):
                 enemy.update_map(self.game.get_player_state(player_num))
-        self._current_state, dead_ants = self._make_observation(self.game.get_player_state(AntsEnv.AGENT_PLAYER_NUM))
+        self._current_state = self._get_observations()
 
         # Calculate reward
         reward_inputs = RewardInputs()
@@ -278,9 +292,9 @@ class AntsEnv(gym.Env):
         reward_inputs.new_state = self._current_state
         reward_inputs.ignored_moves = info[AntsEnv.INFO_AGENT_IGNORED_MOVES]
         reward_inputs.invalid_moves = info[AntsEnv.INFO_AGENT_INVALID_MOVES]
-        reward_inputs.dead_ants = dead_ants
-        reward_inputs.food_consumed = self.game.hive_food[AntsEnv.AGENT_PLAYER_NUM]
-        reward_inputs.score = self.game.score[AntsEnv.AGENT_PLAYER_NUM]
+        # reward_inputs.dead_ants = dead_ants
+        reward_inputs.food_consumed = self.game.hive_food[0]
+        reward_inputs.score = self.game.score[0]
         reward = self.reward_func(reward_inputs)
 
         return self._current_state, reward, self.is_done, info
@@ -292,9 +306,9 @@ class AntsEnv(gym.Env):
         self._current_state = None
         self.game.start_game()
         for i, enemy in enumerate(self.enemies):
-            enemy.setup(self.game.get_player_start(i + 1))
-        obs, _ = self._make_observation(self.game.get_player_state(AntsEnv.AGENT_PLAYER_NUM))
-        return obs
+            enemy.setup(self.game.get_player_start(i + self.num_agents))
+        self.agent_states = self._get_observations(reset=True)
+        return np.copy(self.agent_states)
 
     def visualize(self, game_result=None):
         """
@@ -318,60 +332,152 @@ class AntsEnv(gym.Env):
             'score': self.game.get_scores(),
             'replayformat': 'json',
             'replaydata': self.game.get_replay(),
-            'playernames': ['Agent'] + [enemy.name for enemy in self.enemies]
+            'playernames': [name for name in self.agent_names] + [enemy.name for enemy in self.enemies]
         }
         return game_result
 
-    def _make_observation(self, player_state_str):
-        obs = np.zeros(self.observation_space.shape, dtype=self.observation_space.dtype)
-        obs[AntsEnv.IS_LAND_CHANNEL] = 1    # Set to all land.
-        dead_ants = [[] for i in range(self.game.num_players)]
+    def _get_observations(self, reset=False):
+        if reset:
+            self.agent_states = np.zeros(
+                self.observation_space.shape,
+                dtype=self.observation_space.dtype
+            )
+            # Set all cells to land.
+            self.agent_states[:, AntsEnv.CHANNEL_IS_LAND] = 1
+        for i in range(self.num_agents):
+            state = self.game.get_player_state(i)
+            self._update_observation(i, state)
+        return self.agent_states
+
+    def _update_observation(self, agent_num, player_state_str):
+        obs = self.agent_states[agent_num]
+
+        # clear all transient entities.
+        obs[AntsEnv.CHANNEL_IS_VISIBLE] = 0
+        obs[AntsEnv.CHANNEL_AGENT_ANT] = 0
+        obs[AntsEnv.CHANNEL_DEAD_ANTS] = 0
+        obs[AntsEnv.CHANNEL_ENEMY_ANT_START:] = 0
+        obs[AntsEnv.CHANNEL_ANT_HILL] = 0
+        obs[AntsEnv.CHANNEL_HAS_FOOD] = 0
+
+        # update map
         for line in player_state_str.strip().split('\n'):
             line = line.strip().lower()
             tokens = line.split()
             key, (row, col) = tokens[0], map(int, tokens[1:3])
             owner = None if len(tokens) <= 3 else int(tokens[3])
-            obs[AntsEnv.IS_VISIBLE_CHANNEL, row, col] = 1
+            obs[AntsEnv.CHANNEL_IS_VISIBLE, row, col] = 1
             if key == 'w':
-                obs[AntsEnv.IS_LAND_CHANNEL, row, col] = 0
+                obs[AntsEnv.CHANNEL_IS_LAND, row, col] = 0
             elif key == 'f':
-                obs[AntsEnv.HAS_FOOD_CHANNEL, row, col] = 1
-            elif owner == AntsEnv.AGENT_PLAYER_NUM:
+                obs[AntsEnv.CHANNEL_HAS_FOOD, row, col] = 1
+            elif 0 <= owner < self.num_agents:
+                player_num = owner + 1
                 if key == 'h':
-                    obs[AntsEnv.ANT_HILL_CHANNEL, row, col] = 1
+                    obs[AntsEnv.CHANNEL_ANT_HILL, row, col] = player_num
                 elif key == 'a':
-                    obs[AntsEnv.AGENT_ANTS_CHANNEL, row, col] = 1
+                    obs[AntsEnv.CHANNEL_AGENT_ANT, row, col] = 1
+                    self._update_visibility(obs, row, col)
                 elif key == 'd':
-                    dead_ants[owner].append((row, col))
+                    obs[AntsEnv.CHANNEL_DEAD_ANTS, row, col] = player_num
             elif owner is not None:
+                player_num = owner + 1
                 if key == 'h':
-                    obs[AntsEnv.ANT_HILL_CHANNEL, row, col] = 2
+                    obs[AntsEnv.CHANNEL_ANT_HILL, row, col] = owner
                 elif key == 'a':
-                    channel = AntsEnv.ENEMY_ANTS_CHANNEL_START + owner - 1
+                    channel = AntsEnv.CHANNEL_ENEMY_ANT_START + owner - self.num_agents
                     obs[channel, row, col] = 1
                 elif key == 'd':
-                    dead_ants[owner].append((row, col))
-        return obs, dead_ants
+                    obs[AntsEnv.CHANNEL_DEAD_ANTS, row, col] = player_num
+        return obs
 
     def _action_to_moves(self, action):
         moves = []
         for row in range(action.shape[0]):
             for col in range(action.shape[1]):
-                if action[row, col] == AntsEnv.DONT_MOVE:
+                if action[row, col] == AntsEnv.ACTION_DONT_MOVE:
                     pass
-                elif action[row, col] == AntsEnv.MOVE_NORTH:
+                elif action[row, col] == AntsEnv.ACTION_MOVE_NORTH:
                     moves.append(f'o {row} {col} n')
-                elif action[row, col] == AntsEnv.MOVE_EAST:
+                elif action[row, col] == AntsEnv.ACTION_MOVE_EAST:
                     moves.append(f'o {row} {col} e')
-                elif action[row, col] == AntsEnv.MOVE_SOUTH:
+                elif action[row, col] == AntsEnv.ACTION_MOVE_SOUTH:
                     moves.append(f'o {row} {col} s')
-                elif action[row, col] == AntsEnv.MOVE_WEST:
+                elif action[row, col] == AntsEnv.ACTION_MOVE_WEST:
                     moves.append(f'o {row} {col} w')
                 else:
                     raise ValueError(f'action[{row}, {col}] = {action[row, col]} is not a valid move.')
         return moves
 
-def test():
+    def _update_visibility(self, obs, row, col):
+        """
+        Updates the IS_VISIBLE channel given the location of
+        an ant.
+        """
+        h, w = obs.shape[1:]
+        view_radius_sq = self.game_opts.view_radius_sq
+        view_radius = int(view_radius_sq ** 0.5)
+        offsets = []
+        for off_row in range(-view_radius, view_radius + 1):
+            for off_col in range(-view_radius, view_radius + 1):
+                dist = off_row ** 2 + off_col ** 2
+                if dist <= view_radius_sq:
+                    obs[
+                        AntsEnv.CHANNEL_IS_VISIBLE,
+                        (row + off_row) % h,
+                        (col + off_col) % w
+                    ] = 1
+
+class SampleAgent(Bot):
+    """
+    Use one of the sample bots as an agent.
+    The expected input to setup(), and update_map() are now
+    instances of AntsGym.observation_space, and the output of
+    get_moves() is an instance of AntsGym.action_space.
+
+    Attributes:
+        - bot (SampleBots): Instance of the sample bot.
+        - env (AntsGym): The environment from which the state
+            will be obtained.
+        - player_num (int): The player nuber of the agent in the env.
+    """
+    def __init__(self, bot, env, player_num):
+        self.bot = bot
+        self.env = env
+        self.player_num = player_num
+        name = self.env.agent_names[player_num]
+        super().__init__(name)
+
+    def setup(self):
+        start = self.env.game.get_player_start(self.player_num)
+        self.bot.setup(start)
+
+    def update_map(self, state):
+        # Discard the state for now.
+        moves = self.env.game.get_player_state(self.player_num)
+        self.bot.update_map(moves)
+
+    def get_moves(self):
+        moves = self.bot.get_moves()
+        return self._moves_to_action(moves)
+
+    def _moves_to_action(self, moves):
+        action = np.zeros((1, *self.env.action_space.shape[1:]), dtype=self.env.action_space.dtype)
+        for move in moves:
+            items = move.lower().strip().split(' ')
+            row, col, direction = int(items[1]), int(items[2]), items[3]
+            if direction == 'n':
+                direction = AntsEnv.ACTION_MOVE_NORTH
+            elif direction == 'e':
+                direction = AntsEnv.ACTION_MOVE_EAST
+            elif direction == 's':
+                direction = AntsEnv.ACTION_MOVE_SOUTH
+            elif direction == 'w':
+                direction = AntsEnv.ACTION_MOVE_WEST
+            action[0, row, col] = direction
+        return action
+
+def test(map_file=None, turns=500, num_enemies=5, num_agents=1):
     map_file = os.path.join(
         os.path.dirname(os.path.abspath(__file__)),
         '../../../ants/maps/cell_maze/cell_maze_p06_04.map'
@@ -379,7 +485,7 @@ def test():
     #map_file = '../../../ants/maps/example/tutorial1.map'
     opts = AntsEnvOptions()                     \
         .set_map_file(map_file)                 \
-        .set_turns(500)                         \
+        .set_turns(turns)                       \
         .set_view_radius_sq(81)                 \
         .set_attack_radius_sq(7)                \
         .set_consumption_radius_sq(3)           \
@@ -391,39 +497,31 @@ def test():
         .set_food_spawn_mode('random')          \
         .set_scenario(True)
 
-    agent = SampleBots.random_bot()
     enemies = [
         SampleBots.random_bot(), SampleBots.greedy_bot(),
         SampleBots.hunter_bot(), SampleBots.lefty_bot(),
         SampleBots.test_bot()
-    ]
+    ][:num_enemies]
     reward_func = FoodScoreFunc()
-    env = AntsEnv(opts, enemies, reward_func)
+    agent_names = [f'RandomAgent {i}' for i in range(num_agents)]
+    env = AntsEnv(opts, enemies, reward_func, agent_names)
+
+    agents = [SampleAgent(SampleBots.random_bot(), env, i) for i in range(num_agents)]
+    for agent in agents:
+        agent.setup()
 
     state = env.reset()
-    agent.setup(env.game.get_player_start(AntsEnv.AGENT_PLAYER_NUM))
     turns = 0
     while True:
-        moves = agent.update_map(env.game.get_player_state(AntsEnv.AGENT_PLAYER_NUM)).get_moves()
-        action = np.zeros((env.game.height, env.game.width))
-        for move in moves:
-            items = move.strip().split(' ')
-            row, col, direction = int(items[1]), int(items[2]), items[3]
-            if direction == 'n':
-                direction = AntsEnv.MOVE_NORTH
-            elif direction == 'e':
-                direction = AntsEnv.MOVE_EAST
-            elif direction == 's':
-                direction = AntsEnv.MOVE_SOUTH
-            elif direction == 'w':
-                direction = AntsEnv.MOVE_WEST
-            action[row, col] = direction
-        state, reward, done, info = env.step(action)
+        actions = []
+        for agent in agents:
+            agent.update_map(state)
+            actions.append(agent.get_moves())
+        state, reward, done, info = env.step(np.concatenate(actions, axis=0))
         turns += 1
         if turns % 10 == 0 or reward != 0:
             print(f'Ran for {turns} turns. Last reward: {reward}')
         if done:
-            print(info)
             break
     return env
 
