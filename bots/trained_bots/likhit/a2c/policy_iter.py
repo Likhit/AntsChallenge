@@ -185,12 +185,12 @@ class Trainer(object):
         target = torch.zeros(*(1, self.env.NUM_ACTIONS, *action_taken.shape[1:]), dtype=torch.float32, device=self.device)
         for row in range(action_taken.shape[1]):
             for col in range(action_taken.shape[2]):
-                if info['reward_inputs'].ignored_moves[0][row, col] != 0:
+                if info.reward_inputs.ignored_moves[0][row, col] != 0:
                     target[0, action_taken[0, row, col], row, col] = -1
                 if state[0, self.env.CHANNEL_AGENT_ANT, row, col] != 1:
                     target[0, self.env.ACTION_DONT_MOVE, row, col] = 1
                 else:
-                    target[0, action_taken[0, row, col], row, col] = info['food_distr'][0, 0, row, col]
+                    target[0, action_taken[0, row, col], row, col] = info.food_distr[0, 0, row, col]
         return F.softmax(target, dim=1)
 
 def test(map_file, num_episodes, lr):

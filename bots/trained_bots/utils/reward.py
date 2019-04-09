@@ -106,14 +106,14 @@ class ScoreFunc(RewardFunc):
         score = np.asarray([reward_inputs.game.score[i] for i in reward_inputs.num_agents])
         diff = score - self._old_score
         self._old_score = score
-        info = []
+        meta = []
         for i in range(reward_inputs.num_agents):
-            info.append(None)
+            meta.append(None)
             if diff[0] > 0:
                 for hill in reward_inputs.game.hills.values():
                     if hill.end_turn == reward_inputs.game.turn and hill.killed_by == i:
-                        info[i] = hill.loc
-        return diff, info
+                        meta[i] = hill.loc
+        return diff, SimpleNamespace(inputs=reward_inputs, scores=meta)
 
 class FoodFunc(RewardFunc):
     """
@@ -139,7 +139,7 @@ class FoodFunc(RewardFunc):
         old_state = reward_inputs.old_state
         new_state = reward_inputs.new_state
 
-        info = np.zeros((
+        meta = np.zeros((
             num_agents, game.num_players + 1,
             game.height, game.width
         ))
@@ -148,19 +148,18 @@ class FoodFunc(RewardFunc):
                 if food.loc == (row, col) and food.end_turn == game.turn:
                     r, w = food.loc
                     owner = -1 if food.owner is None else food.owner
-                    info[agent, owner, r, w] = 1
+                    meta[agent, owner, r, w] = 1
                     break
 
-        info[np.arange(num_agents), np.arange(num_agents)] *= self.consume_weight
-        info[:, -1] *= self.denied_weight
+        meta[np.arange(num_agents), np.arange(num_agents)] *= self.consume_weight
+        meta[:, -1] *= self.denied_weight
         for agent in range(num_agents):
-            info[agent][~np.isin(np.arange(game.num_players + 1), [agent, game.num_players - 1])] *= self.lost_weight
+            meta[agent][~np.isin(np.arange(game.num_players + 1), [agent, game.num_players - 1])] *= self.lost_weight
 
-        info_dict = {
-            'reward_inputs': reward_inputs,
-            'food_distr': info
-        }
-        return info.sum(axis=tuple(range(1, len(info.shape)))), info_dict
+        info = SimpleNamespace(
+            inputs=reward_inputs, food_distr=meta
+        )
+        return meta.sum(axis=tuple(range(1, len(meta.shape)))), info
 
     @staticmethod
     def _get_consumed_food(old_state, new_state):
