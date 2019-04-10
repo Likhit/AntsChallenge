@@ -90,7 +90,7 @@ class Tee(object):
     def close(self):
         for file in self.files:
             file.close()
-            
+
 def main(argv):
     usage ="Usage: %prog [options] map bot1 bot2\n\nYou must specify a map file."
     parser = OptionParser(usage=usage)
@@ -124,7 +124,7 @@ def main(argv):
     parser.add_option("--engine_seed", dest="engine_seed",
                       default=None, type="int",
                       help="Engine seed for the random number generator")
-    
+
     parser.add_option('--strict', dest='strict',
                       action='store_true', default=False,
                       help='Strict mode enforces valid moves for bots')
@@ -186,7 +186,7 @@ def main(argv):
     #    profiling to stderr
     # the log directory will contain
     #    the replay or stream file used by the visualizer, if requested
-    #    the bot input/output/error logs, if requested    
+    #    the bot input/output/error logs, if requested
     log_group = OptionGroup(parser, "Logging Options", "Options that control the logging")
     log_group.add_option("-g", "--game", dest="game_id", default=0, type='int',
                          help="game id to start at when numbering log files")
@@ -352,7 +352,7 @@ def run_rounds(opts,args):
         if not opts.log_replay and not opts.log_stream and (opts.log_dir or opts.log_stdout):
             opts.log_replay = True
         replay_path = None # used for visualizer launch
-        
+
         if opts.log_replay:
             if opts.log_dir:
                 replay_path = os.path.join(opts.log_dir, '{0}.replay'.format(game_id))
@@ -375,7 +375,7 @@ def run_rounds(opts,args):
                     engine_options['stream_log'] = sys.stdout
         else:
             engine_options['stream_log'] = None
-        
+
         if opts.log_input and opts.log_dir:
             engine_options['input_logs'] = [open(os.path.join(opts.log_dir, '{0}.bot{1}.input'.format(game_id, i)), 'w')
                              for i in range(bot_count)]
@@ -404,14 +404,14 @@ def run_rounds(opts,args):
                 engine_options['error_logs'] = [stderr] * bot_count
         else:
             engine_options['error_logs'] = None
-        
+
         if opts.verbose:
             if opts.log_stdout:
                 engine_options['verbose_log'] = Comment(sys.stdout)
             else:
                 engine_options['verbose_log'] = sys.stdout
-            
-        engine_options['game_id'] = game_id 
+
+        engine_options['game_id'] = game_id
         if opts.rounds > 1:
             print('# playgame round {0}, game id {1}'.format(round, game_id))
 
@@ -426,7 +426,7 @@ def run_rounds(opts,args):
         # add player names, write to proper io, reset back to normal
         if opts.log_replay:
             replay_json = json.loads(intcpt_replay_io.getvalue())
-            replay_json['playernames'] = [get_cmd_name(arg) for arg in args]
+            replay_json['playernames'] = [get_cmd_name(arg) or f'Bot {i}' for i, arg in enumerate(args)]
             real_replay_io.write(json.dumps(replay_json))
             intcpt_replay_io.close()
             engine_options['replay_log'] = real_replay_io

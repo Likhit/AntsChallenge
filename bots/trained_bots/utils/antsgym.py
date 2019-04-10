@@ -5,7 +5,7 @@ import sys
 import gym
 import numpy as np
 
-from .enemybots import Bot, SampleBots
+from .enemybots import Bot, SampleBots, CmdBot
 from .reward import RewardInputs, FoodFunc
 
 ANTS_MODULE = os.path.join(
@@ -254,7 +254,9 @@ class AntsEnv(gym.Env):
 
         Args:
             - action (object): An action provided by the
-                environment
+                environment. If one of the agents is no longer
+                alive, but the game is still going on, then that
+                player's action is ignored.
 
         Returns:
             observation (object): Agent's observation of the
@@ -281,11 +283,11 @@ class AntsEnv(gym.Env):
         player_order = list(range(self.game.num_players))
         np.random.shuffle(player_order)
         for player_num in player_order:
+            if not self.game.is_alive(player_num): continue
             if 0 <= player_num < self.num_agents:
                 moves = self._action_to_moves(action[player_num])
             else:
                 enemy_ind = player_num - self.num_agents
-                if not self.game.is_alive(player_num): continue
                 moves = self.enemies[enemy_ind].get_moves()
 
             valid, ignored, invalid = self.game.do_moves(player_num, moves)
@@ -303,7 +305,6 @@ class AntsEnv(gym.Env):
             if self.game.is_alive(player_num):
                 enemy.update_map(self.game.get_player_state(player_num))
         obs = self._get_observations()
-
         # Calculate reward
         reward_inputs.set_new_state(obs)
         reward, info = self.reward_func(reward_inputs)
@@ -316,7 +317,9 @@ class AntsEnv(gym.Env):
         self.is_done = False
         self.game.start_game()
         for i, enemy in enumerate(self.enemies):
+            enemy.reset()
             enemy.setup(self.game.get_player_start(i + self.num_agents))
+            enemy.update_map(self.game.get_player_state(i + self.num_agents))
         obs = self._get_observations(reset=True)
         return obs
 
@@ -355,6 +358,7 @@ class AntsEnv(gym.Env):
             # Set all cells to land.
             self._current_state[:, AntsEnv.CHANNEL_IS_LAND] = 1
         for i in range(self.num_agents):
+            if not self.game.is_alive(i): continue
             state = self.game.get_player_state(i)
             self._update_observation(i, state)
         return np.copy(self._current_state)
@@ -390,7 +394,6 @@ class AntsEnv(gym.Env):
                     self._update_visibility(obs, row, col)
                 elif key == 'd':
                     obs[AntsEnv.CHANNEL_DEAD_ANTS, row, col] = player_num
-                    print(line)
             elif owner is not None:
                 player_num = owner + 1
                 if key == 'h':
@@ -492,6 +495,10 @@ class SampleAgent(Bot):
         moves = self.bot.get_moves()
         return self._moves_to_action(moves)
 
+    def reset(self):
+        self.bot.reset()
+        return self
+
     def _moves_to_action(self, moves):
         action = np.zeros((1, *self.env.action_space.shape[1:]), dtype=self.env.action_space.dtype)
         for move in moves:
@@ -512,8 +519,7 @@ class SampleAgent(Bot):
 def test(map_file=None, turns=500, num_enemies=5, num_agents=1):
     map_file = os.path.join(
         os.path.dirname(os.path.abspath(__file__)),
-        '../../../ants/maps/example/tutorial1.map'
-        # '../../../ants/maps/cell_maze/cell_maze_p06_04.map'
+        '../../../ants/maps/cell_maze/cell_maze_p06_04.map'
     )
     #map_file = '../../../ants/maps/example/tutorial1.map'
     opts = AntsEnvOptions()                     \
@@ -530,10 +536,15 @@ def test(map_file=None, turns=500, num_enemies=5, num_agents=1):
         .set_food_spawn_mode('random')          \
         .set_scenario(True)
 
+    winner_bot_dir = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        '../../winner_bots/first_place/'
+    )
+    winner_bot_cmd = f'java -cp {winner_bot_dir} MyBot'
     enemies = [
-        SampleBots.random_bot(), SampleBots.greedy_bot(),
-        SampleBots.hunter_bot(), SampleBots.lefty_bot(),
-        SampleBots.test_bot()
+        CmdBot('xanthis', winner_bot_cmd),
+        SampleBots.random_bot(), SampleBots.lefty_bot(),
+        SampleBots.hunter_bot(), SampleBots.greedy_bot()
     ][:num_enemies]
     reward_func = FoodFunc()
     agent_names = [f'RandomAgent {i}' for i in range(num_agents)]
