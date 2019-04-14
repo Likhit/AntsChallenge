@@ -102,8 +102,8 @@ class ScoreFunc(RewardFunc):
         if self._old_score is None:
             # Initialize old_score to number of hills owned by
             # player.
-            self._old_score = np.asarray([len(reward_inputs.game.player_hills(i)) for i in reward_inputs.num_agents])
-        score = np.asarray([reward_inputs.game.score[i] for i in reward_inputs.num_agents])
+            self._old_score = np.asarray([len(reward_inputs.game.player_hills(i)) for i in range(reward_inputs.num_agents)])
+        score = np.asarray([reward_inputs.game.score[i] for i in range(reward_inputs.num_agents)])
         diff = score - self._old_score
         self._old_score = score
         meta = []
@@ -168,3 +168,31 @@ class FoodFunc(RewardFunc):
         consumed = np.where((summation == 1))
         for agent, row, col in zip(*consumed):
             yield agent, row, col
+
+
+class CompositeFunc(RewardFunc):
+    """
+    Reward is a linear combination of multiple reward fucntions.
+    The returned info object contains the info of all individual
+    scorers.
+
+    Args:
+        funcs ([(reard_func, float)]): A list of tuples for each
+            reward function to use, along with the weight to give
+            it.
+    """
+    def __init__(self, funcs):
+        self.funcs = funcs
+
+    def reset(self):
+        for func, weight in self.funcs:
+            func.reset()
+
+    def _calculate_reward(self, reward_inputs):
+        total = 0
+        info = SimpleNamespace()
+        for func, weight in self.funcs:
+            reward, reward_info = func(reward_inputs)
+            total += (weight * reward)
+            setattr(info, type(func).__name__, reward_info)
+        return total, info

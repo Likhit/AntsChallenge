@@ -153,6 +153,12 @@ class CmdBot(Bot):
         self.reset()
 
     def setup(self, map_data):
+        self.sandbox = get_sandbox(self.wd, False)
+        self.sandbox.start(self.cmd)
+        if not self.sandbox.is_alive:
+            raise Exception('The bot crashed at start. Check the commands.')
+        self.sandbox.pause()
+
         map_data += 'ready\n'
         self.sandbox.write(map_data)
         self.get_moves() # Wait for go from bot (moves will be empty)
@@ -192,11 +198,6 @@ class CmdBot(Bot):
             self.sandbox.kill()
             self.sandbox.release()
         self.turn = 0
-        self.sandbox = get_sandbox(self.wd, False)
-        self.sandbox.start(self.cmd)
-        if not self.sandbox.is_alive:
-            raise Exception('The bot crashed at start. Check the commands.')
-        self.sandbox.pause()
         return self
 
     @staticmethod
