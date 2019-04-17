@@ -79,11 +79,14 @@ def play_game(map_file, players):
         for agent in agents:
             agent.update_map(state)
             actions.append(agent.get_moves())
-        n_state, reward, done, info = env.step(np.concatenate(actions, axis=0))
+        actions = np.concatenate(actions, axis=0)
+        n_state, reward, done, info = env.step(actions)
         result.append(SimpleNamespace(
             state=state, next_state=n_state,
-            reward=reward, info=get_slim_info(info)
+            reward=reward, info=get_slim_info(info),
+            action=actions
         ))
+        state = n_state
         if done:
             result = SimpleNamespace(
                 history=result, result=env.get_game_result()

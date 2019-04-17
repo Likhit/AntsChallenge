@@ -181,7 +181,7 @@ class AntsEnv(gym.Env):
         - agent_names ([str]): A list of names for each agent.
 
     Properties:
-        - observation_space: Box of shape (n, 4 + num_players,
+        - observation_space: Box of shape (n, 5 + num_players,
             game_hight, game_width) of type np.uint8 where n is
             the number of agents. Most cell values are 0, or 1
             to represent True, or False respectively. There are
@@ -521,7 +521,7 @@ def test(map_file=None, turns=500, num_enemies=5, num_agents=1):
         os.path.dirname(os.path.abspath(__file__)),
         '../../../ants/maps/cell_maze/cell_maze_p06_04.map'
     )
-    #map_file = '../../../ants/maps/example/tutorial1.map'
+    #map_file = '../../../ants/maps/example/tutorial_p2_1.map'
     opts = AntsEnvOptions()                     \
         .set_map_file(map_file)                 \
         .set_turns(turns)                       \
