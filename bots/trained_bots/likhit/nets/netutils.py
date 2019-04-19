@@ -78,6 +78,4 @@ def collate_namespace(namespace_list):
     for item in namespace_list:
         for attr in attrs:
             getattr(result, attr).append(getattr(item, attr))
-    # for attr in attrs:
-    #     setattr(result, attr, np.asarray(getattr(result, attr)))
     return result

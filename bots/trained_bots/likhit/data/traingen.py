@@ -9,7 +9,6 @@ import os
 import pickle
 import random
 import shelve
-from torch.utils.data import Dataset
 
 class ShelveManager(object):
     """
@@ -38,7 +37,8 @@ class ShelveManager(object):
 
     def _open(self):
         """
-        Opens the shelves.
+        Opens the shelves for train, test, and validation datasets
+        at specified directory.
         """
         self._train_db = shelve.open(os.path.join(self.shelve_dir, 'train'))
         self._test_db  = shelve.open(os.path.join(self.shelve_dir, 'test'))
@@ -47,7 +47,6 @@ class ShelveManager(object):
         self._last_train_index = self._train_db.get(ShelveManager._LAST_INDEX_KEY, 0)
         self._last_test_index = self._test_db.get(ShelveManager._LAST_INDEX_KEY, 0)
         self._last_val_index = self._val_db.get(ShelveManager._LAST_INDEX_KEY, 0)
-        return self
 
     def add(self, step):
         """
@@ -87,41 +86,9 @@ class ShelveManager(object):
         self.close()
 
 
-class ShelveDataset(Dataset):
-    """
-    Dataset which reads from a shelve where the keys are the index
-    of an entry.
-
-    Args:
-        shelve_file (str): The file path containing the dataset shelve.
-        transform (callable): Transforms to be applied to the data.
-    """
-    def __init__(self, shelve_file, transform=None):
-        self.shelve_file = shelve_file
-        self.transform = transform
-        self._shelve = shelve.open(self.shelve_file, 'c')
-
-    def __len__(self):
-        return len(self._shelve) - 1
-
-    def __getitem__(self, idx):
-        item = self._shelve[str(idx)]
-        if self.transform:
-            item = self.transform(item)
-        return item
-
-    def close(self):
-        self._shelve.close()
-
-    def __enter__(self):
-        self._shelve.__enter__()
-        return self
-
-    def __exit__(self, type, value, traceback):
-        self.close()
-
-
 def main(args):
+    if not os.path.exists(args.save_dir):
+        os.mkdir(args.save_dir)
     with ShelveManager(args.save_dir, args.train, args.test) as shelve_manager:
         for data_file in glob.glob(args.episode_data_glob):
             with open(data_file, 'rb') as file_handle:
