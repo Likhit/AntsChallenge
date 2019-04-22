@@ -1,0 +1,2 @@
+1) change input space to take each ant state within a radius separately.
+2) change the reward function distribution for different ants ------ how to do this????
