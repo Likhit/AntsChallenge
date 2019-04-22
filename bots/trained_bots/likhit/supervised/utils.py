@@ -118,7 +118,7 @@ class GameSpaceToAntSpaceTransformer(DataLoaderTransformer):
                 if hasattr(batch, 'reward'):
                     num_ants = np.count_nonzero(locs[0] == i)
                     reward = batch.reward[index]
-                    result.reward.append(reward[i] / num_ants)
+                    result.reward.append(reward[i])
 
                 if hasattr(batch, 'info'):
                     info = batch.info[index]
@@ -241,23 +241,33 @@ class Trainer(abc.ABC):
             loader = GameSpaceToAntSpaceTransformer(dl, self.view_radius, self.device)
             self.evaluator.run(loader, max_epochs=1)
 
-    def test(self, map_file=None):
-        map_file = os.path.join(
+    def test(self, map_file=None, opponent=None, opponent_plays_first=False):
+        map_file = map_file or os.path.join(
             os.path.dirname(os.path.abspath(__file__)),
-            map_file or '../../../../ants/maps/example/tutorial_p2_1.map'
+            '../../../../ants/maps/example/tutorial_p2_1.map'
             # '../../../../ants/maps/cell_maze/cell_maze_p02_04.map'
         )
+        opponent = opponent or utils.enemybots.SampleBots.greedy_bot()
+        if opponent_plays_first:
+            agent_num, opponent_num = 1, 0
+            player_names = [opponent.name, self.net_name]
+        else:
+            agent_num, opponent_num = 0, 1
+            player_names = [self.net_name, opponent.name]
+
         opts = utils.antsgym.AntsEnvOptions()   \
             .set_map_file(map_file)
-        enemies = [utils.enemybots.SampleBots.greedy_bot()]
         reward_func = utils.reward.ScoreFunc()
-        env = utils.antsgym.AntsEnv(opts, enemies, reward_func, ['policy'])
+        env = utils.antsgym.AntsEnv(opts, [], reward_func, player_names)
+
+        opponent = utils.antsgym.SampleAgent(opponent, env, opponent_num)
+        opponent.setup()
 
         self.net.eval()
         state = env.reset()
         while True:
             transformer = GameSpaceToAntSpaceTransformer(
-                [SimpleNamespace(state=[state])],
+                [SimpleNamespace(state=[state[[agent_num]]])],
                 self.view_radius, self.device
             )
             batch, batch_locs = [], []
@@ -269,14 +279,57 @@ class Trainer(abc.ABC):
             with torch.no_grad():
                 out = self.net(batch)
                 sample = self.get_test_action(out)
-            actions = np.zeros((1, env.game.height, env.game.width))
+            agent_acts = np.zeros((1, env.game.height, env.game.width))
             for i, (_, row, col) in enumerate(batch_locs):
-                actions[0, row, col] = sample[i]
+                agent_acts[0, row, col] = sample[i]
 
+            opponent.update_map(state[opponent_num])
+            opponent_acts = opponent.get_moves()
+
+            if agent_num == 0:
+                actions = np.concatenate([agent_acts, opponent_acts], axis=0)
+            else:
+                actions = np.concatenate([opponent_acts, agent_acts], axis=0)
             state, reward, done, info = env.step(actions)
             if done:
                 break
         return env
+
+    def benchmark(self, map_files, num_trials):
+        opponents = [
+            lambda: utils.enemybots.CmdBot.xanthis_bot(),
+            lambda: utils.enemybots.SampleBots.random_bot(),
+            lambda: utils.enemybots.SampleBots.lefty_bot(),
+            lambda: utils.enemybots.SampleBots.hunter_bot(),
+            lambda: utils.enemybots.SampleBots.greedy_bot()
+        ]
+        result = {}
+        for map_file in map_files:
+            result[map_file] = {}
+            for opponent in opponents:
+                for trial in range(num_trials):
+                    o = opponent()
+                    env = self.test(map_file, o, False)
+                    game_results = env.get_game_result()
+                    if o.name not in result[map_file]:
+                        result[map_file][o.name] = {'wins': [0, 0], 'losses': [0, 0], 'turns': [0, 0]}
+                    if game_results['score'][0] > game_results['score'][1]:
+                        result[map_file][o.name]['wins'][0] += 1
+                    elif game_results['score'][0] < game_results['score'][1]:
+                        result[map_file][o.name]['losses'][0] += 1
+                    result[map_file][o.name]['turns'][0] = len(game_results['replaydata']['scores'][0])
+                    env.visualize()
+                for trial in range(num_trials):
+                    o = opponent()
+                    env = self.test(map_file, o, True)
+                    game_results = env.get_game_result()
+                    if game_results['score'][1] > game_results['score'][0]:
+                        result[map_file][o.name]['wins'][1] += 1
+                    elif game_results['score'][1] < game_results['score'][0]:
+                        result[map_file][o.name]['losses'][1] += 1
+                    result[map_file][o.name]['turns'][1] = len(game_results['replaydata']['scores'][0])
+                    env.visualize()
+        return result
 
     def restore_net(self, net_path, epoch_num):
         """

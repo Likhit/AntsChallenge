@@ -536,13 +536,8 @@ def test(map_file=None, turns=500, num_enemies=5, num_agents=1):
         .set_food_spawn_mode('random')          \
         .set_scenario(True)
 
-    winner_bot_dir = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)),
-        '../../winner_bots/first_place/'
-    )
-    winner_bot_cmd = f'java -cp {winner_bot_dir} MyBot'
     enemies = [
-        CmdBot('xanthis', winner_bot_cmd),
+        CmdBot.xanthis_bot(),
         SampleBots.random_bot(), SampleBots.lefty_bot(),
         SampleBots.hunter_bot(), SampleBots.greedy_bot()
     ][:num_enemies]

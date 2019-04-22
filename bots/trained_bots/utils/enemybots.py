@@ -202,7 +202,9 @@ class CmdBot(Bot):
 
     @staticmethod
     def _get_cmd_wd(cmd):
-        ''' get the proper working directory from a command line '''
+        """
+        Get the proper working directory from a command line
+        """
         new_cmd = []
         wd = None
         for i, part in reversed(list(enumerate(cmd.split()))):
@@ -216,3 +218,16 @@ class CmdBot(Bot):
             else:
                 new_cmd.insert(0, part)
         return wd, ' '.join(new_cmd)
+
+    @staticmethod
+    def xanthis_bot():
+        """
+        Returns the a bot played by the winner of the Ants challenge.
+        """
+        winner_bot_dir = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            '../../winner_bots/first_place/'
+        )
+        winner_bot_cmd = f'java -cp {winner_bot_dir} MyBot'
+        bot_name = 'xanthis' # The username of the contest winner.
+        return CmdBot('xanthis', winner_bot_cmd)
