@@ -43,11 +43,12 @@ class PolicyTrainer(Trainer):
         print(f'Val acc: {engine.state.metrics["val_acc"]}')
 
 
-class ShallowPolicyTrainer(PolicyTrainer):
+class ShallowPolicy1Trainer(PolicyTrainer):
     def define_net(self):
         shape = (7, 2 * self.view_radius, 2 * self.view_radius)
-        net = nets.nets.ShallowStandAlonePolicy(shape, 16)
-        return net, 'ShallowPolicy'
+        filters = [8, 8, 8, 3]
+        net = nets.nets.ShallowNet1(shape, 3, filters)
+        return net, f'ShallowPolicy1_r{self.view_radius}'
 
     def get_loss(self, output, target):
         return F.cross_entropy(output, target)
@@ -55,4 +56,28 @@ class ShallowPolicyTrainer(PolicyTrainer):
     def get_test_action(self, network_output):
         softmax = F.softmax(network_output, dim=1)
         return torch.distributions.Categorical(softmax).sample()
+
+
+class ShallowPolicy2Trainer(ShallowPolicy1Trainer):
+    def define_net(self):
+        shape = (7, 2 * self.view_radius, 2 * self.view_radius)
+        filters = [8, 8, 8, 8]
+        net = nets.nets.ShallowNet2(shape, filters)
+        return net, f'ShallowPolicy2_r{self.view_radius}'
+
+
+class DeepPolicy1Trainer(ShallowPolicy1Trainer):
+    def define_net(self):
+        shape = (7, 2 * self.view_radius, 2 * self.view_radius)
+        filters = [[8, 8, 8, 3], [8, 8, 8, 3]]
+        net = nets.nets.DeepNet1(shape, 3, filters)
+        return net, f'DeepPolicy1_r{self.view_radius}'
+
+
+class DeepPolicy2Trainer(ShallowPolicy1Trainer):
+    def define_net(self):
+        shape = (7, 2 * self.view_radius, 2 * self.view_radius)
+        filters = [[8, 8, 8, 8], [8, 8, 8, 8]]
+        net = nets.nets.DeepNet2(shape, filters)
+        return net, f'DeepPolicy2_r{self.view_radius}'
 

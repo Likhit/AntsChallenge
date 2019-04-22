@@ -116,12 +116,14 @@ class GameSpaceToAntSpaceTransformer(DataLoaderTransformer):
                     result.action.append(action[i, row, col])
 
                 if hasattr(batch, 'reward'):
+                    num_ants = np.count_nonzero(locs[0] == i)
                     reward = batch.reward[index]
-                    result.reward.append(reward[i])
+                    result.reward.append(reward[i] / num_ants)
 
                 if hasattr(batch, 'info'):
                     info = batch.info[index]
-                    self.transform_info(info, player_num)
+                    new_info = self.transform_info(info, i, row, col)
+                    result.info.append(new_info)
 
         for i in range(0, len(result.state), batch_size):
             ret = SimpleNamespace()
@@ -139,7 +141,7 @@ class GameSpaceToAntSpaceTransformer(DataLoaderTransformer):
             if len(result.reward) > 0:
                 ret.reward = torch.stack(
                     result.reward[i:(i + batch_size)]
-                ).to(self.device)
+                ).float().to(self.device)
 
             if len(result.info) > 0:
                 ret.info = torch.stack(
@@ -148,8 +150,14 @@ class GameSpaceToAntSpaceTransformer(DataLoaderTransformer):
 
             yield ret
 
-    def transform_info(self, info, player_num):
-        pass
+    def transform_info(self, info, player_num, row, col):
+        new_info = 0
+        if hasattr(info, 'food_distr'):
+            new_info += info.food_distr[player_num, player_num, row, col]
+        if hasattr(info, 'raze_loc') and not any([x is None for x in info.raze_loc]):
+            if info.raze_loc[0] - row <= 3 or info.raze_loc[1] - col <= 3:
+                new_info += 100
+        return torch.tensor(new_info, dtype=torch.float32)
 
 
 class Trainer(abc.ABC):
@@ -229,7 +237,7 @@ class Trainer(abc.ABC):
         self.net.eval()
         ds_path = os.path.join(self.ds_path, 'val')
         with self.get_shelve_dataset(ds_path) as ds, torch.no_grad():
-            dl = DataLoader(ds, batch_size=128, shuffle=False, collate_fn=netutils.collate_namespace)
+            dl = DataLoader(ds, batch_size=512, shuffle=False, collate_fn=netutils.collate_namespace)
             loader = GameSpaceToAntSpaceTransformer(dl, self.view_radius, self.device)
             self.evaluator.run(loader, max_epochs=1)
 
@@ -245,6 +253,7 @@ class Trainer(abc.ABC):
         reward_func = utils.reward.ScoreFunc()
         env = utils.antsgym.AntsEnv(opts, enemies, reward_func, ['policy'])
 
+        self.net.eval()
         state = env.reset()
         while True:
             transformer = GameSpaceToAntSpaceTransformer(
@@ -268,6 +277,18 @@ class Trainer(abc.ABC):
             if done:
                 break
         return env
+
+    def restore_net(self, net_path, epoch_num):
+        """
+        Loads the network parameters from a file.
+
+        Args:
+            net_path (str): The path to the pickled network params.
+            epoch_num (int): The epoch at which the net was saved (in order to continue from here when saving later).
+        """
+        self.net.load_state_dict(torch.load(net_path))
+        self.saver._iteration = epoch_num
+        return self
 
     def _add_metrics(self):
         train_loss = RunningAverage(Loss(self.get_loss))
