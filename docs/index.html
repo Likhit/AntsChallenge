@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <link rel="stylesheet" type="text/css" href="index.css">
+
+    <script type="text/javascript" src="https://distill.pub/template.v2.js"></script>
+    <script type="text/javascript" src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-MML-AM_CHTML' async></script>
+    <script src="index.js"></script>
+
+    <title>Document</title>
+</head>
+<body>
+    <d-front-matter>
+        <script type="text/json">{
+            "title": "Using Deep Reinforcement Learning to play Ants",
+            "description": "Ants is a multiplayer turn based capture-the-hill board game. Here we attempt to train a bot to play the game using deep RL.",
+            "authors": [{
+                "author": "Anurima Padwal",
+                "authorURL": "http://someurl.com",
+                "affiliation": ""
+            }, {
+                "author": "Apoorva KH",
+                "authorURL": "http://someurl.com",
+                "affiliation": ""
+            }, {
+                "author": "Arunkumar",
+                "authorURL": "http://someurl.com",
+                "affiliation": ""
+            }, {
+                "author": "Dhanya Raghu",
+                "authorURL": "http://someurl.com",
+                "affiliation": ""
+            }, {
+                "author": "Likhit Dharmapuri",
+                "authorURL": "https://www.linkedin.com/in/likhitd",
+                "affiliation": ""
+            }]
+        }</script>
+
+    </d-front-matter>
+
+    <d-title>
+        <h1>Using Deep Reinforcement Learning to Play Ants</h1>
+        <p>Ants is a multiplayer turn based capture-the-hill board game. Here we attempt to train a bot to play the game using deep reinforcement learning.</p>
+        <d-figure class="l-screen">
+            <video id="poster-vid" src="assets/videos/winnergame.mp4" autoplay controls loop preload="auto" playbackRate="3"></video>
+            <figcaption>
+                An example of the ants game with 7 players. Each player starts with two ant hills in this game.
+            </figcaption>
+        </d-figure>
+    </d-title>
+    <d-article>
+        <p>The <a href="http://ants.aichallenge.org/">“Ants” AI Challenge</a> was an artificial intelligence programming contest conducted by the University of Waterloo in Fall 2011. This contest requires the creation of an AI agent that controls a colony of ants to fight other colonies dominance in a competitive environment.</p>
+        <p>The game itself is a multiplayer strategy game set on a plot of dirt and water. Each player starts with a set of ant hills and one ant on each hill. By gathering food that spawns randomly on the board, players can increase the number of ants under their control. The final objective of the game is to capture the enemy's ant hill by placing the player's ant on top of the enemy hill.</p>
+
+        <h3>Game Rules</h3>
+        <p><em>Ants</em> is a turn based game. Players can only see the portion of the board within the vicinity of their own ants. At each turn, every player submits moves each of their ants on the board in one of the four directions: north, east, south or west. Once all players have made their submissions the game executes the turn in the following phases:</p>
+
+        <ol id="game-phases">
+            <li><em>move</em> all ants in the specified direction (ants from the same team are killed if they collide)</li>
+
+            <li><em>attack</em> enemy ants within range of each other</li>
+
+            <li><em>raze</em> any ant hill with an enemy ant positioned on it</li>
+
+            <li><em>spawn</em> more ants at un-razed player ant hills if the player has enough food reserves</li>
+
+            <li><em>gather</em> food within range of an ant (food disappears if it is within range of multiple enemy ants)</li>
+        </ol>
+
+        <p>After execution of all phases, each player receives a new board state, and the game proceeds to the next turn.</p>
+
+        <h3>Challenges</h3>
+        <p>Since each ant on the board is moved at the end of every turn, the player is in effect controlling multiple agents (one agent per ant). Not only that, the number of agents is not fixed &mdash; as the game progresses, the number of ants in on the board will increase. Multi-agent RL is a challenging problem which is still in its nascent stages of research.</p>
+        <p>All entries to the competition so far have been implementations of min-max and the A* algorithm. There has been no attempt so far to use a trained bot to play the game.</p>
+        <p>This allows us to work on something novel and challenging. At the same time the computationally simple nature of the game provides a feasible problem to work on.</p>
+
+        <h2>Problem Formulation</h2>
+        <p>For the sake of this project we limit ourselves to boards with only two players, and only one ant hill per player. We also limit ourselves to playing on the following two maps.</p>
+
+        <d-figure>
+            <div id="maps">
+                <img src="assets/images/map1.png" alt="map1">
+                <img src="assets/images/map2.png" alt="map2">
+            </div>
+            <figcaption>The maps used for both training and testing throughout this project. The left map is of size <code>43 x 39</code>, while the map on the right is of size <code>110 x 114</code>.</figcaption>
+        </d-figure>
+
+        <p>A common vocabulary used to define problems in the RL landscape are:</p>
+        <ul>
+            <li><em>State Space:</em> The set of all states that the game can take, and</li>
+            <li><em>Action Space:</em> The set of all possible actions that can be ever taken</li>
+        </ul>
+        <p>This vocabulary is also used to describe problems abstractly by <a href="https://gym.openai.com/">OpenAI Gym</a>, the popular toolkit for developing and comparing reinforcement learning algorithms. Therefore, we formulated our game using the same vocabulary in order to leverage existing work on RL.</p>
+
+        <h3>Game State</h3>
+        <p>Given a game board of height <code>H</code> and width <code>W</code>, there are a number aspects on the board (like visible area, food positions, etc.) which the game state needs to capture. Using an image of the game board would be unnecessarily complicated. Instead, the game board can be described as a byte tensor <code>S</code> of the shape <code>(7, H, W)</code> where the seven channels describe different board features.</p>
+
+        <d-figure class="l-page">
+            <div id="state-diag">
+                <img src="#" alt="{Map}">
+                <ul>
+                    <li>Visibility Channel: <code>True</code> if the cell is visible to the agent</li>
+                    <li>Land Channel: <code>True</code> if the the cell is land, <code>False</code> if water</li>
+                    <li>Food Channel: <code>True</code> if the cell has food</li>
+                    <li>Ant Hill Channel: <code>PLAYER NUMBER</code> if the cell contains an ant hill</li>
+                    <li>Player Ant Channel: <code>True</code> if the cell contains one of the player's ants</li>
+                    <li>Enemy Ant Channel: <code>True</code> if the cell contains one of the enemy's ants</li>
+                </ul>
+                <img src="#" alt="{Selected Channel Image}">
+            </div>
+            <figcaption>State description of example game board. White color represents a value of <code>1</code> / <code>True</code>, while black depicts <code>0</code> / <code>False</code>.</figcaption>
+        </d-figure>
+
+        <h3>Action Space</h3>
+        <p>In order to avoid dealing with a changing action space (which changes with the number of ants on the board), we instead use a constant action space tensor <code>A</code> of the shape <code>(H, W)</code>. The values in <code>A[h, w]</code> can be one of <code>north (1)</code>, <code>south (2)</code>, <code>east (3)</code>, <code>west (4)</code>, and <code>none (0)</code>. The values describe the direction in which the ant in cell <code>(h, w)</code> should move. <code>none (0)</code> is used in cells without any ant, and for ants which shouldn't move.</p>
+
+        <d-figure>
+            <img alt="{SVG for example action space}">
+            <figcaption>An example action for the given board state. All empty cells have contain <code>none (0)</code> byte.</figcaption>
+        </d-figure>
+
+        <h3>Rewards</h3>
+        <p>A reward of <code>1</code> is obtained every time an enemy ant hill is razed, and a penalty of <code>-1</code> is incurred when the player's ant hill is razed. Such a reward is very sparse since most games go on for a few hundred turns. In order to augment the score, we have developed a number of other reward functions.</p>
+
+        {Table with the reward functions}
+
+        <p>The new reward functions all have the ability to provide rewards for each ant rather than the whole board state. Depending on the mode of training, we might choose to use this distributed reward, or the total state reward.</p>
+
+        <h2>Approaches</h2>
+        <p>We primarily attempted to train bots using multiple variations of the DQN and A2C algorithm. But before we detail the approaches, we must first specify a way to test the performance of our trained bots.</p>
+
+        <h3>Baselines</h3>
+        <p>In order to test the performance of our bots we played our bots against a number of simpler bots.
+
+        {Table for each bot: Random, Hunter, Greedy, and Xanthis}
+
+        In order to discount for randomness of the game (eg. food spawn rate, etc.) we run the trained bots multiple times against each one of the baseline bots.</p>
+
+        <h3>DQN</h3>
+        <p>Reinforcement Learning is a technique in which an agent attempts to learn an optimal policy based on its interactions with the environment. At each time step, the agent observes a state \(s\), chooses an action \(a\) to perform on the state, obtains a reward \(r\), and transitions to a new state \(\hat{s}\). Q-learning is an approach in which we incrementally estimate the “value” of performing an action \(a\) in state \(s\) by updating the following rule:
+            $$ Q(s, a) = Q(s, a) + \alpha \cdot (r + \gamma \cdot max_{\hat{a}} Q(\hat{s}, \hat{a}) - Q(s, a)) $$
+        </p>
+
+        <p>Here, \(Q(s, a)\) represents the quality of taking an action \(a\) in state \(s\). Q-learning can be extended to deep reinforcement learning frameworks by using a neural network as a function approximator \(Q(s, a|\theta)\) where \(\theta\) represents the weights of the network that parametrize the Q values. The weights of the neural network are updated by minimizing the loss function:
+            $$ L(s, a|\theta_{i}) = ((r + \gamma \cdot max_{\hat{a}} Q(\hat{s}, \hat{a})) - Q(s, a))^2 $$
+        </p>
+
+        {Short para on your network arch (NOTE: you say you use huber loss, but the above loss function is MSE). Don't bother with experience replay and target network. They are both standard. Just mention it and give a citatation.}
+
+        <br>
+        {NN diagram}
+
+        <h4>Result</h4>
+        {Result table of training for each combination of the reward function used}
+        <br>
+        {Video of side by side game play against random bot. Left video is DQN without any training. Right is trained DQN.}
+        <br>
+        {Describe the result, what is good, and what is bad. And why bad (difficulty in training reason).}
+
+
+        <h3>Supervised Training + A2C</h3>
+
+        <h3>Concluding Remarks</h3>
+
+        <h2>Future Work</h2>
+
+    </d-article>
+    <d-appendix>
+        <h3>Acknowledgements</h3>
+        <p>To tutors</p>
+
+        <h3>Author Contributions</h3>
+        <p>Who did what</p>
+        <d-citation-list></d-citation-list>
+    </d-appendix>
+</body>
+</html>

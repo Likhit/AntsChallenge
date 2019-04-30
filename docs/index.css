@@ -1,0 +1,57 @@
+d-article {
+    text-align: justify;
+}
+
+.l-screen {
+    background-color: hsl(0, 0%, 97%);
+}
+
+d-figure>figcaption {
+    text-align: center;
+    padding-bottom: 1em;
+}
+
+#poster-vid {
+    display: block;
+    padding: 1em 0 1em 0;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+li em {
+    font-weight: 600;
+}
+
+#maps {
+    display: flex;
+}
+
+#maps>img{
+    width: 50%;
+    padding: 1em;
+}
+
+#state-diag {
+    display: flex;
+    background-color: hsl(0, 0%, 97%);
+}
+
+#state-diag>img {
+    width: 30%;
+}
+
+#state-diag>ul {
+    width: 40%;
+    list-style: none;
+    padding: 0.1em 0 0.1em 0;
+    margin: 0;
+    text-align: left;
+}
+
+#state-diag>ul>li {
+    margin: 0.05em;
+    padding: 0.1em;
+    border: 0.05em solid gray;
+    background-color: aliceblue;
+}
+
