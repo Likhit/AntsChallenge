@@ -196,7 +196,7 @@ class AntsEnv(gym.Env):
                 - Channel 5: If the cell has an ant which died the
                     previous turn, then the player num (starting
                     from 1) of the dead ant. Else 0.
-                - Channel 5 and greater: If the cell has an enemy
+                - Channel 6 and greater: If the cell has an enemy
                     ant (one channel per enemy player).
 
         - action_space: Box of shape (n, game_height, game_width)

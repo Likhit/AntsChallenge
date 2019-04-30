@@ -299,7 +299,6 @@ class Trainer(abc.ABC):
         opponents = [
             lambda: utils.enemybots.CmdBot.xanthis_bot(),
             lambda: utils.enemybots.SampleBots.random_bot(),
-            lambda: utils.enemybots.SampleBots.lefty_bot(),
             lambda: utils.enemybots.SampleBots.hunter_bot(),
             lambda: utils.enemybots.SampleBots.greedy_bot()
         ]
@@ -317,8 +316,7 @@ class Trainer(abc.ABC):
                         result[map_file][o.name]['wins'][0] += 1
                     elif game_results['score'][0] < game_results['score'][1]:
                         result[map_file][o.name]['losses'][0] += 1
-                    result[map_file][o.name]['turns'][0] = len(game_results['replaydata']['scores'][0])
-                    env.visualize()
+                    result[map_file][o.name]['turns'][0] += len(game_results['replaydata']['scores'][0])
                 for trial in range(num_trials):
                     o = opponent()
                     env = self.test(map_file, o, True)
@@ -327,8 +325,9 @@ class Trainer(abc.ABC):
                         result[map_file][o.name]['wins'][1] += 1
                     elif game_results['score'][1] < game_results['score'][0]:
                         result[map_file][o.name]['losses'][1] += 1
-                    result[map_file][o.name]['turns'][1] = len(game_results['replaydata']['scores'][0])
-                    env.visualize()
+                    result[map_file][o.name]['turns'][1] += len(game_results['replaydata']['scores'][0])
+                result[map_file][o.name]['turns'][0] /= num_trials
+                result[map_file][o.name]['turns'][1] /= num_trials
         return result
 
     def restore_net(self, net_path, epoch_num):
