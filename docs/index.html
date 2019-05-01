@@ -472,7 +472,10 @@
             <figcaption>The table depicts the percentage of wins, losses, ties, and the average number of turns per game for the trained A2C bot against the baseline bots on <code>Map1</code> and <code>Map2</code>. Each player pairing was played 10 times on each map.</figcaption>
         </d-figure>
 
-        {Add video comparison} <br>
+        <d-figure>
+            <video id="poster-vid" src="assets/videos/a2c-compare.mp4" autoplay mute controls loop preload="auto"></video>
+            <figcaption>Comparison of the untrained policy network (on left) and trained policy network (right) vs the <code>GreedyBot</code> (blue player). Through training we are able to go from a swift defeat to a major victory.</figcaption>
+        </d-figure>
 
         <p>Our bot gets major wins against the <code>Random</code>, <code>Hunter</code>, and <code>Greedy</code> bots. However, despite the wins, it still gets completely destroyed against the <code>Winner</code> bot.</p>
 
