@@ -76,3 +76,7 @@ d-figure table th {
     border-right: 1px solid rgba(0, 0, 0, 0.2);
 }
 
+d-figure>img {
+    width: 100%;
+}
+

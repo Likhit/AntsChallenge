@@ -122,8 +122,8 @@
         <p>In order to avoid dealing with a changing action space (which changes with the number of ants on the board), we instead use a constant action space tensor <code>A</code> of the shape <code>(H, W)</code>. The values in <code>A[h, w]</code> can be one of <code>north (1)</code>, <code>south (2)</code>, <code>east (3)</code>, <code>west (4)</code>, and <code>none (0)</code>. The values describe the direction in which the ant in cell <code>(h, w)</code> should move. <code>none (0)</code> is used in cells without any ant, and for ants which shouldn't move.</p>
 
         <d-figure>
-            <img alt="{SVG for example action space}">
-            <figcaption>An example action for the given board state. All empty cells have contain <code>none (0)</code> byte.</figcaption>
+            <img src="assets/images/actionspace.jpeg">
+            <figcaption>An example action for the given board state of the orange player. Blue depicts <code>north</code>, pink depicts <code>south</code>, yellow <code>east</code> and green <code>west</code>. All the white cells (majority of the map) are <code>none</code></figcaption>
         </d-figure>
 
         <h3>Rewards</h3>
@@ -375,7 +375,10 @@
 
         <p>In order to do so, given a game state \(S\), we decompose \(S\) into a sub-state \(s_i\) for each ant \(i\) in \(S\). This is done by taking a square centered around each any \(i\).</p>
 
-        {Figure to describe sub state creation.} <br>
+        <d-figure>
+            <img src="assets/images/substates.png">
+            <figcaption>Sub-states created for the orange player. A small box of <code>15x15</code> cells is taken centered around each ant.</figcaption>
+        </d-figure>
 
         <p>Once we have our sub states, we define our policy \(\pi(s_i, \theta_{\pi})\) which returns an action \(a_i\) for the ant \(i\). Similarly, our value function is defined as \(Q(s_i, a_i)\) which returns the reward \(r_i\) obtained by performing action \(a_i\) on ant \(i\).</p>
 
