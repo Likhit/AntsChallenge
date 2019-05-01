@@ -193,9 +193,10 @@
             namely, aggregated reward, reward for collisions, reward for dead ants. Aggregated reward is a weighted linear
         combination of all the individual reward functions like collision, dead ants, obstacles, food and score.</p>
 
-
-        <br>
-        <img src="assets/images/DQN.jpg" style = "height:50%">
+        <d-figure>
+            <img src="assets/images/DQN.jpg">
+            <figcaption>The Q function network used</figcaption>
+        </d-figure>
 
         <h4>Results</h4>
         <d-figure>
@@ -397,7 +398,14 @@
         <p>Once we have our sub states, we define our policy \(\pi(s_i, \theta_{\pi})\) which returns an action \(a_i\) for the ant \(i\). Similarly, our value function is defined as \(Q(s_i, a_i)\) which returns the reward \(r_i\) obtained by performing action \(a_i\) on ant \(i\).</p>
 
         <p>We attempt to learn the policy and value function using the following networks.</p>
-        {Insert network diag} <br>
+
+        <d-figure>
+            <div id="a2c-networks">
+                <img src="assets/images/a2cpolicy-1.jpg">
+                <img src="assets/images/a2cvalue-1.jpg">
+            </div>
+            <figcaption>The policy network (left), and the value network (right) used. The subsets created for training use a box of size <code>18 x 18</code>. The output includes both a score reward, and a food reward both tensors of size \(5\).</figcaption>
+        </d-figure>
 
         <p>The training technique described in this section is heavily inspired from the AlphaGo paper. The training of the bot goes through two phases.</p>
 

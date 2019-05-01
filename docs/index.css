@@ -81,3 +81,11 @@ d-figure>img {
     width: 100%;
 }
 
+#a2c-networks {
+    display: flex;
+}
+
+#a2c-networks img {
+    width: 50%;
+}
+
