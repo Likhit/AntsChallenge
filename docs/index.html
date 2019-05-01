@@ -129,7 +129,7 @@
         <h3>Rewards</h3>
         <p>A reward of <code>1</code> is obtained every time an enemy ant hill is razed, and a penalty of <code>-1</code> is incurred when the player's ant hill is razed. Such a reward is very sparse since most games go on for a few hundred turns. In order to augment the score, we have developed a number of other reward functions.</p>
 
-        <ol id="game-phases">
+        <ol id="reward-functions">
             <li><em>Food : </em> Rewards movement towards the food positively.</li>
 
             <li><em>Score : </em> Improvement in score is positively rewarded.</li>
@@ -150,7 +150,7 @@
         <p>In order to test the performance of our bots we played our bots against a number of simpler bots.
 
         <br>
-        {Table for each bot: Random, Hunter, Greedy, and Xanthis}
+
         <br>
         {Videos for gameplay}
         <br>
@@ -176,19 +176,21 @@
             $$
             L(&delta;) =
             \begin{cases}
-            \frac{1}{2} \cdot (y - \hat{y})^2, & \text{if } |(y - \hat{y})| &lt; &delta; \\
+            \frac{1}{2} \cdot (y - \hat{y})^2 & \text{if } |(y - \hat{y})| &lt; &delta; \\
             &delta; \cdot (y - \hat{y}) - \frac{&delta;}{2} & \text{otherwise}
             \end{cases}
             $$
         </p>
 
-        <p>We use experience replay to further improve the training of the model.</p>
+        <p>We use experience replay to further improve the training of the model. We have three variations of reward functions
+            namely, aggregated reward, reward for collisions, reward for dead ants. Aggregated reward is a weighted linear
+        combination of all the individual reward functions like collision, dead ants, obstacles, food and score.</p>
 
 
         <br>
         <img src="assets/images/DQN.jpg" style = "height:50%">
 
-        <h4>Result</h4>
+        <h4>Results</h4>
         <d-figure>
             <table>
                 <tr>
@@ -363,8 +365,14 @@
         <br>
         {Video of side by side game play against random bot. Left video is DQN without any training. Right is trained DQN.}
         <br>
-        {Describe the result, what is good, and what is bad. And why bad (difficulty in training reason).}
 
+        <p>
+            The results are tabulated for DQN architecture for different reward functions.
+            Collision and die rewards individually perform better than the aggregate; as the agent will not be able to focus simultaneously
+            on different rewards as they gets neutralized.
+            The model performs best against random bot for both maps. Overall, our agents perform better on Map2 because
+            Map2 is bigger than Map1, thus giving more area of land for the agent ants to explore and reducing the rate of collision amongst them.
+        </p>
 
         <h3>Supervised Training + A2C</h3>
         <p>The <em>A2C</em> or Advantage Actor Critic algorithms are a set of policy gradient methods. The agent has two parts, the <strong>actor</strong> i.e. the policy network which learns the probability with which each action should be taken, and the <strong>critic</strong> i.e. the value function which estimates the value of each state. The critic is used to compare against the actual reward obtained by the agent; the difference which is the error is then used to update both the actor as well as the critic.</p>
