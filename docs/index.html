@@ -104,18 +104,18 @@
 
         <d-figure class="l-page">
             <div id="state-diag">
-                <img src="#" alt="{Map}">
+                <img src="assets/images/full.png">
                 <ul>
-                    <li>Visibility Channel: <code>True</code> if the cell is visible to the agent</li>
-                    <li>Land Channel: <code>True</code> if the the cell is land, <code>False</code> if water</li>
-                    <li>Food Channel: <code>True</code> if the cell has food</li>
-                    <li>Ant Hill Channel: <code>PLAYER NUMBER</code> if the cell contains an ant hill</li>
-                    <li>Player Ant Channel: <code>True</code> if the cell contains one of the player's ants</li>
-                    <li>Enemy Ant Channel: <code>True</code> if the cell contains one of the enemy's ants</li>
+                    <li id="visibility-channel">Visibility Channel: <code>True</code> if the cell is visible to the agent</li>
+                    <li id="land-channel">Land Channel: <code>True</code> if the the cell is land, <code>False</code> if water</li>
+                    <li id="food-channel">Food Channel: <code>True</code> if the cell has food</li>
+                    <li id="ant-hill-channel">Ant Hill Channel: <code>PLAYER NUMBER</code> if the cell contains an ant hill</li>
+                    <li id="player-ant-channel">Player Ant Channel: <code>True</code> if the cell contains one of the player's ants</li>
+                    <li id="enemy-ant-channel">Enemy Ant Channel: <code>True</code> if the cell contains one of the enemy's ants</li>
                 </ul>
-                <img src="#" alt="{Selected Channel Image}">
+                <img id="channel-img" src="assets/images/visibility.png">
             </div>
-            <figcaption>State description of example game board. White color represents a value of <code>1</code> / <code>True</code>, while black depicts <code>0</code> / <code>False</code>.</figcaption>
+            <figcaption>State description of example game board from the perspective of the orange player. Black color represents a value of <code>1</code> / <code>True</code>, while white depicts <code>0</code> / <code>False</code>; except in the visibility channel in which white depicts the visible cells.</figcaption>
         </d-figure>
 
         <h3>Action Space</h3>
