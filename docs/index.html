@@ -54,7 +54,7 @@
         </d-figure>
     </d-title>
     <d-article>
-        <p>The <a href="http://ants.aichallenge.org/">“Ants” AI Challenge</a> was an artificial intelligence programming contest conducted by the University of Waterloo in Fall 2011. This contest requires the creation of an AI agent that controls a colony of ants to fight other colonies for dominance in a competitive environment.</p>
+        <p>The <a href="http://ants.aichallenge.org/">“Ants” AI Challenge</a> <d-cite key="antschallenge"></d-cite> was an artificial intelligence programming contest conducted by the University of Waterloo in Fall 2011. This contest requires the creation of an AI agent that controls a colony of ants to fight other colonies for dominance in a competitive environment.</p>
         <p>The game itself is a multiplayer strategy game set on a plot of dirt and water. Each player starts with a set of ant hills and one ant on each hill. By gathering food that spawns randomly on the board, players can increase the number of ants under their control. The final objective of the game is to capture the enemy's ant hill by placing the player's ant on top of the enemy hill.</p>
 
         <h3>Game Rules</h3>
@@ -131,15 +131,11 @@
         <h3>Rewards</h3>
         <p>A reward of <code>1</code> is obtained every time an enemy ant hill is razed, and a penalty of <code>-1</code> is incurred when the player's ant hill is razed. Such a reward is very sparse since most games go on for a few hundred turns. In order to augment the score, we have developed a number of other reward functions.</p>
 
-        <ol id="reward-functions">
+        <ol>
             <li><em>Food : </em> Rewards movement towards the food positively.</li>
-
             <li><em>Score : </em> Improvement in score is positively rewarded.</li>
-
             <li><em>Death : </em> Death of ants is negatively rewarded.</li>
-
             <li><em>Collision : </em> Collision of two ants of the same team is penalized.</li>
-
             <li><em>Obstacles : </em> Encourages ants to move away from obstacles (i.e water).</li>
         </ol>
 
@@ -149,14 +145,13 @@
         <p>We primarily attempted to train bots using multiple variations of the DQN and A2C algorithm. But before we detail the approaches, we must first specify a way to test the performance of our trained bots.</p>
 
         <h3>Baselines</h3>
-        <p>In order to test the performance of our bots we played our bots against a number of simpler bots.
+        <p>In order to test the performance of our bots we played our bots against a number of simpler bots.</p>
 
-        <br>
         <ol>
-            <li><b><i>Random bot: </i></b>The Random bot moves every ant a random direction every turn.</li>
-            <li><b><i>Hunter bot: </i></b>The Hunter bot targets enemy ants and pursues them.</li>
-            <li><b><i>Greedy bot: </i></b>The Greedy bot prioritizes moves in the order of hunting enemy hills over hunting for food over hunting enemy ants over exploring the map.</li>
-            <li><b><i>Xanthis bot: </i></b>The Xanthis bot is the winner bot of the Ants AI challenge held in 2011 </li>
+            <li><em>Random bot:</em> The Random bot moves every ant a random direction every turn.</li>
+            <li><em>Hunter bot:</em> The Hunter bot targets enemy ants and pursues them.</li>
+            <li><em>Greedy bot:</em> The Greedy bot prioritizes moves in the order of hunting enemy hills over hunting for food over hunting enemy ants over exploring the map.</li>
+            <li><em>Winner bot:</em> The Winner bot<d-cite key="winnerbot"></d-cite> is the winner bot of the Ants AI challenge held in 2011 </li>
         </ol>
 
         <d-figure class="l-screen">
@@ -164,41 +159,41 @@
             <figcaption>A game of each of the mentioned bots against each other. Yellow is the winner bot, orange is the random bot, pink is the hunter bot, and blue is the greedy bot.</figcaption>
         </d-figure>
 
-        In order to discount for randomness of the game (eg. food spawn rate, etc.) we run the trained bots multiple times against each one of the baseline bots.</p>
+        <p>In order to discount for randomness of the game (eg. food spawn rate, etc.) we run the trained bots multiple times against each one of the baseline bots.</p>
 
         <h3>DQN</h3>
-        <p>Reinforcement Learning is a technique in which an agent attempts to learn an optimal policy based on its interactions with the environment. At each time step, the agent observes a state \(S\), chooses an action \(A\) to perform on the state, obtains a reward \(R\), and transitions to a new state \(\hat{S}\). Q-learning is an approach in which we incrementally estimate the “value” of performing an action \(A\) in state \(S\) by updating the following rule:
+        <p>Reinforcement Learning is a technique in which an agent attempts to learn an optimal policy based on its interactions with the environment. At each time step, the agent observes a state \(S\), chooses an action \(A\) to perform on the state, obtains a reward \(R\), and transitions to a new state \(\hat{S}\). Q-learning <d-cite key="qlearning"></d-cite><d-cite key="Mnih2015"></d-cite><d-cite key="DBLP:journals/corr/TampuuMKKKAAV15"></d-cite> is an approach in which we incrementally estimate the “value” of performing an action \(A\) in state \(S\) by updating the following rule:
             $$ Q(S, A) = Q(S, A) + \alpha \cdot (R + \gamma \cdot max_{\hat{A}} Q(\hat{S}, \hat{A}) - Q(S, A)) $$
         </p>
 
-        <p>Here, \(Q(S, A)\) represents the quality of taking an action \(A\) in state \(S\). Q-learning can be extended to deep reinforcement learning frameworks by using a neural network as a function approximator \(Q(S, A|\theta)\) where \(\theta\) represents the weights of the network that parametrize the Q values.
-        </p>
+        <p>Here, \(Q(S, A)\) represents the quality of taking an action \(A\) in state \(S\). Q-learning can be extended to deep reinforcement learning frameworks by using a neural network as a function approximator \(Q(S, A|\theta)\) where \(\theta\) represents the weights of the network that parametrize the Q values.</p>
 
-        <p>
-            The state space of the game is passed through a CNN to extract the features of the state space, following which we learn the probabilities of the five actions for each cell in which our agent ant is present using Q learning.
-        We build a deep network to learn the values of Q for deciding the action to be taken, i.e., the policy function. Q-learning learns the action-value function Q(s, a): how good it is to take an action at a particular state. We select an action based on our Q-values using exploration and exploitation techniques.
-
-        </p>
-        <p>
-            The target for calculating the loss is calculated by taking the maximum of the action values possible for the next state.
-            Further, we use Huber loss for training our DQN model. The weights of the neural network are updated by minimizing the loss function:
-            $$
-            L(&delta;) =
-            \begin{cases}
-            \frac{1}{2} \cdot (y - \hat{y})^2 & \text{if } |(y - \hat{y})| &lt; &delta; \\
-            &delta; \cdot (y - \hat{y}) - \frac{&delta;}{2} & \text{otherwise}
-            \end{cases}
-            $$
-        </p>
-
-        <p>We use experience replay to further improve the training of the model. We have three variations of reward functions
-            namely, aggregated reward, reward for collisions, reward for dead ants. Aggregated reward is a weighted linear
-        combination of all the individual reward functions like collision, dead ants, obstacles, food and score.</p>
+        <p>We use a multi-layer CNN network on the state space of the game to output the value of taking an action at each cell. Hence, the output of the \(Q\) function is a tensor of the shape <code>(5, H, W)</code>. Each channel \(i\) in the output tensor represents the value of taking action \(i\) at the cell. For exploration, a random action is chosen for each cell, while for exploitation the action with the highest value is chosen.</p>
 
         <d-figure>
             <img src="assets/images/DQN.jpg">
             <figcaption>The Q function network used</figcaption>
         </d-figure>
+
+        <p>We use temporal difference learning <d-cite key="Sutton1988"></d-cite> with Huber loss to train the network.
+            $$
+            L(&delta;) =
+            \begin{cases}
+            \frac{1}{2} \cdot (Q(S, A) - (R + \gamma \cdot max_{\hat{A}} Q(\hat{S}, \hat{A})))^2 & \text{if } |(y - \hat{y})| &lt; &delta; \\
+            &delta; \cdot (Q(S, A) - (R + \gamma \cdot max_{\hat{A}} Q(\hat{S}, \hat{A}))) - \frac{&delta;}{2} & \text{otherwise}
+            \end{cases}
+            $$
+        </p>
+
+        <p>Experience replay with a buffer size of \(10000\) is used to further improve the training of the model. Using the different reward functions we already created we trained a number of bots using combinations of different reward functions:</p>
+
+        <ul>
+            <li><em>Collision</em> bot uses only the collision reward.</li>
+            <li><em>Die</em> bot uses only the reward from the death reward function.</li>
+            <li><em>Aggregate</em> bot uses a linear combination of all reward functions.</li>
+        </ul>
+
+        <p>Due to problems with overestimation of Q-values when using a <code>max</code> operator over the possible actions, we also trained a Double DQN <d-cite key="DBLP:journals/corr/HasseltGS15"></d-cite> using the aggregate rewards.</p>
 
         <h4>Results</h4>
         <d-figure>
@@ -372,20 +367,13 @@
             </table>
             <figcaption>The table depicts the percentage of wins, losses, ties, and the average number of turns per game for the trained DQN bots against the baseline bots on <code>Map2</code>. Each player pairing was played 10 times on each map.</figcaption>
         </d-figure>
-        <br>
-        <p></p>
-        <br>
 
-        <p>
-            The results are tabulated for DQN architecture for different reward functions.
-            Collision and die rewards individually perform better than the aggregate; as the agent will not be able to focus simultaneously
-            on different rewards as they gets neutralized.
-            The model performs best against random bot for both maps. Overall, our agents perform better on Map2 because
-            Map2 is bigger than Map1, thus giving more area of land for the agent ants to explore and reducing the rate of collision amongst them.
-        </p>
+        <p>The results are tabulated for DQN architecture for different reward functions. Collision and die rewards individually perform better than the aggregate; as the agent will not be able to focus simultaneously on different rewards as they gets neutralized. The model performs best against random bot for both maps. Overall, our agents perform better on <code>Map2</code> because <code>Map2</code> is bigger than <code>Map1</code>, thus giving more area of land for the agent ants to explore and reducing the rate of collision amongst them.</p>
+
+        <p>Given that we are also trying to learn the actions for all ants on the board in one shot, it is understandable that the DQN algorithm isn't performing well. The \(Q\) function described here is an extremely hard function to learn. For a board state with \(n\) ants, the network must find the optimal value combination out of a total of \(5^n\) possible combinations.</p>
 
         <h3>Supervised Training + A2C</h3>
-        <p>The <em>A2C</em> or Advantage Actor Critic algorithms are a set of policy gradient methods. The agent has two parts, the <strong>actor</strong> i.e. the policy network which learns the probability with which each action should be taken, and the <strong>critic</strong> i.e. the value function which estimates the value of each state. The critic is used to compare against the actual reward obtained by the agent; the difference which is the error is then used to update both the actor as well as the critic.</p>
+        <p>The <em>A2C</em> or Advantage Actor Critic <d-cite key="DBLP:journals/corr/MnihBMGLHSK16"></d-cite> algorithms are a set of policy gradient methods. The agent has two parts, the <strong>actor</strong> i.e. the policy network which learns the probability with which each action should be taken, and the <strong>critic</strong> i.e. the value function which estimates the value of each state. The critic is used to compare against the actual reward obtained by the agent; the difference which is the error is then used to update both the actor as well as the critic.</p>
 
         <p>So far, we have been trying to learn the actions for all ants on the board in one shot. As described earlier, this is an extremely hard function to learn. In order to offset this problem, we instead try to train a network which learns the best action for each ant separately.</p>
 
@@ -408,7 +396,7 @@
             <figcaption>The policy network (left), and the value network (right) used. The subsets created for training use a box of size <code>18 x 18</code>. The output includes both a score reward, and a food reward both tensors of size \(5\).</figcaption>
         </d-figure>
 
-        <p>The training technique described in this section is heavily inspired from the AlphaGo paper. The training of the bot goes through two phases.</p>
+        <p>The training technique described in this section is heavily inspired from the AlphaGo paper <d-cite key="AlphaGo"></d-cite>. The training of the bot goes through two phases.</p>
 
         <h4>Supervised training</h4>
         <p>In this stage, we learn a policy and value function from generated training data. The training data is generated by playing the <code>RandomBot</code>, <code>HunterBot</code>, <code>GreedyBot</code>, and the <code>WinnerBot</code> against each other multiple times on <code>Map1</code>, and <code>Map2</code>. For each turn of every game, we store the current state \(S\), action taken \(A\), and reward earned \(R\) by each player. The total data collected is broken an \(80/20\) train/test split.</p>
@@ -514,15 +502,11 @@
         <h3>Author Contributions</h3>
         <p>Likhit - Custom Ants Gym environment, Implementation of Supervised Training using A2C</p>
         <p>Anurima, Apoorva, Arun and Dhanya - Implemenation of Deep Q-Learning using Experience Replay and Target Network, Double Deep
-        Q Learning, Deep Q- Learning using RNN 
+        Q Learning, Deep Q- Learning using RNN
         -->
-        <d-citation-list>
-            <ol>
-                <li><a href = "http://ants.aichallenge.org/">Ants Challenge</a></li>
-                <li>Mnih, V., Kavukcuoglu, K., Silver, D., Graves, A., Antonoglou, I., Wierstra, D.,and Riedmiller, M.(Dec 2013). <a href = "https://arxiv.org/abs/1312.5602">Playing Atari with deep reinforcement learning</a>, Deepmind Technologies.</li>
-                <li>George van den Driessche, Julian Schrittwieser, Ioannis Antonoglou, VedaPanneershelvam, Marc Lanctot, Sander Dieleman, Dominik Grewe, JohnNham, Nal Kalchbrenner, Ilya Sutskever, Timothy Lillicrap, Madeleine Leach,Koray Kavukcuoglu, Thore Graepel and Demis Hassabis.<a href = "http://web.iitd.ac.in/~sumeet/Silver16.pdf"> Mastering the game of Go with deep neural networks and tree search</a></li>
-            </ol>
-                </d-citation-lis
+        <d-citation-list></d-citation-list>
     </d-appendix>
+
+    <d-bibliography src="bibliography.bib"></d-bibliography>
 </body>
 </html>
