@@ -149,9 +149,13 @@
         <h3>Baselines</h3>
         <p>In order to test the performance of our bots we played our bots against a number of simpler bots.
 
-        <br>
-        {Table for each bot: Random, Hunter, Greedy, and Xanthis}
-        <br>
+        <ol>
+            <li><em>Random bot: </em>The Random bot moves every ant a random direction every turn.</li>
+            <li><em>Hunter bot: </em>The Hunter bot targets enemy ants and pursues them.</li>
+            <li><em>Greedy bot: </em>The Greedy bot prioritizes moves in the order of hunting enemy hills over hunting for food over hunting enemy ants over exploring the map.</li>
+            <li><em>Winner bot: </em>The Winner bot is the winner bot of the Ants AI challenge held in 2011 (you can see it in the poster video of this article by the name xanthis).</li>
+        </ol>
+
         {Videos for gameplay}
         <br>
 
@@ -212,64 +216,64 @@
                     <th>#Turns</th>
                 </tr>
                 <tr>
-                    <th class="right-border">Simple</th>
+                    <th class="right-border">AggregateRewards</th>
+                    <td>0%</td>
                     <td>100%</td>
                     <td>0%</td>
+                    <td class="right-border">84</td>
                     <td>0%</td>
-                    <td class="right-border">88</td>
-                    <td>90%</td>
+                    <td>100%</td>
                     <td>0%</td>
-                    <td>10%</td>
-                    <td class="right-border">146</td>
-                    <td>90%</td>
+                    <td class="right-border">121</td>
                     <td>0%</td>
-                    <td>10%</td>
-                    <td>130</td>
+                    <td>100%</td>
+                    <td>0%</td>
+                    <td>27</td>
                 </tr>
                 <tr>
                     <th class="right-border">Collision</th>
+                    <td>0%</td>
+                    <td>90%</td>
+                    <td>10%</td>
+                    <td class="right-border">108</td>
+                    <td>0%</td>
                     <td>100%</td>
                     <td>0%</td>
+                    <td class="right-border">73</td>
                     <td>0%</td>
-                    <td class="right-border">431</td>
-                    <td>80%</td>
+                    <td>100%</td>
                     <td>0%</td>
-                    <td>20%</td>
-                    <td class="right-border">475</td>
-                    <td>90%</td>
-                    <td>0%</td>
-                    <td>10%</td>
-                    <td>509</td>
+                    <td>29</td>
                 </tr>
                 <tr>
                     <th class="right-border">Die</th>
+                    <td>0%</td>
                     <td>100%</td>
                     <td>0%</td>
+                    <td class="right-border">157</td>
                     <td>0%</td>
-                    <td class="right-border">431</td>
                     <td>80%</td>
-                    <td>0%</td>
                     <td>20%</td>
-                    <td class="right-border">475</td>
-                    <td>90%</td>
+                    <td class="right-border">65</td>
                     <td>0%</td>
-                    <td>10%</td>
-                    <td>509</td>
+                    <td>100%</td>
+                    <td>0%</td>
+                    <td>37</td>
                 </tr>
                 <tr>
                     <th class="right-border">Double</th>
+                    <td>0%</td>
                     <td>100%</td>
                     <td>0%</td>
+                    <td class="right-border">2173</td>
                     <td>0%</td>
-                    <td class="right-border">431</td>
-                    <td>80%</td>
+                    <td>100%</td>
                     <td>0%</td>
-                    <td>20%</td>
-                    <td class="right-border">475</td>
-                    <td>90%</td>
+                    <td class="right-border">250</td>
                     <td>0%</td>
-                    <td>10%</td>
-                    <td>509</td>
+                    <td>100%</td>
+                    <td>0%</td>
+                    <td>311</td>
                 </tr>
             </table>
             <figcaption>The table depicts the percentage of wins, losses, ties, and the average number of turns per game for the trained DQN bots against the baseline bots on <code>Map1</code>. Each player pairing was played 10 times on each map.</figcaption>
@@ -298,64 +302,64 @@
                     <th>#Turns</th>
                 </tr>
                 <tr>
-                    <th class="right-border">Simple</th>
-                    <td>100%</td>
+                    <th class="right-border">AggregateRewards</th>
                     <td>0%</td>
+                    <td>30%</td>
+                    <td>70%</td>
+                    <td class="right-border">94</td>
                     <td>0%</td>
-                    <td class="right-border">88</td>
-                    <td>90%</td>
+                    <td>30%</td>
+                    <td>70%</td>
+                    <td class="right-border">151</td>
                     <td>0%</td>
-                    <td>10%</td>
-                    <td class="right-border">146</td>
-                    <td>90%</td>
-                    <td>0%</td>
-                    <td>10%</td>
-                    <td>130</td>
+                    <td>30%</td>
+                    <td>70%</td>
+                    <td>151</td>
                 </tr>
                 <tr>
                     <th class="right-border">Collision</th>
-                    <td>100%</td>
-                    <td>0%</td>
-                    <td>0%</td>
-                    <td class="right-border">431</td>
-                    <td>80%</td>
                     <td>0%</td>
                     <td>20%</td>
-                    <td class="right-border">475</td>
-                    <td>90%</td>
+                    <td>80%</td>
+                    <td class="right-border">94</td>
                     <td>0%</td>
-                    <td>10%</td>
-                    <td>509</td>
+                    <td>20%</td>
+                    <td>80%</td>
+                    <td class="right-border">145</td>
+                    <td>0%</td>
+                    <td>40%</td>
+                    <td>60%</td>
+                    <td>327</td>
                 </tr>
                 <tr>
                     <th class="right-border">Die</th>
-                    <td>100%</td>
-                    <td>0%</td>
-                    <td>0%</td>
-                    <td class="right-border">431</td>
-                    <td>80%</td>
                     <td>0%</td>
                     <td>20%</td>
-                    <td class="right-border">475</td>
-                    <td>90%</td>
+                    <td>80%</td>
+                    <td class="right-border">151</td>
                     <td>0%</td>
-                    <td>10%</td>
-                    <td>509</td>
+                    <td>70%</td>
+                    <td>30%</td>
+                    <td class="right-border">77</td>
+                    <td>0%</td>
+                    <td>0%</td>
+                    <td>100%</td>
+                    <td>111</td>
                 </tr>
                 <tr>
                     <th class="right-border">Double</th>
+                    <td>0%</td>
+                    <td>0%</td>
                     <td>100%</td>
+                    <td class="right-border">785</td>
                     <td>0%</td>
                     <td>0%</td>
-                    <td class="right-border">431</td>
-                    <td>80%</td>
+                    <td>100%</td>
+                    <td class="right-border">785</td>
                     <td>0%</td>
-                    <td>20%</td>
-                    <td class="right-border">475</td>
-                    <td>90%</td>
-                    <td>0%</td>
-                    <td>10%</td>
-                    <td>509</td>
+                    <td>50%</td>
+                    <td>50%</td>
+                    <td>2138</td>
                 </tr>
             </table>
             <figcaption>The table depicts the percentage of wins, losses, ties, and the average number of turns per game for the trained DQN bots against the baseline bots on <code>Map2</code>. Each player pairing was played 10 times on each map.</figcaption>

@@ -40,6 +40,7 @@ li em {
 
 #state-diag>img {
     width: 30%;
+    height: 100%;
     margin: 1em;
     border: 0.05em solid gray;
 }
