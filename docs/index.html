@@ -21,23 +21,23 @@
             "authors": [{
                 "author": "Anurima Padwal",
                 "authorURL": "https://www.linkedin.com/in/anurima-padwal-433260135/",
-                "affiliation": "USC"
+                "affiliation": "University of Southern California"
             }, {
-                "author": "Apoorva KH",
+                "author": "Apoorva Katharaki Hathi",
                 "authorURL": "https://www.linkedin.com/in/apoorvakh/",
-                "affiliation": "USC"
+                "affiliation": "University of Southern California"
             }, {
                 "author": "Arunkumar Rajendran",
                 "authorURL": "https://www.linkedin.com/in/arunkumar-rajendran/",
-                "affiliation": "USC"
+                "affiliation": "University of Southern California"
             }, {
                 "author": "Dhanya Raghu",
                 "authorURL": "https://www.linkedin.com/in/dhanya-raghu/",
-                "affiliation": "USC"
+                "affiliation": "University of Southern California"
             }, {
                 "author": "Likhit Dharmapuri",
                 "authorURL": "https://www.linkedin.com/in/likhitd",
-                "affiliation": "USC"
+                "affiliation": "University of Southern California"
             }]
         }</script>
 
@@ -75,7 +75,7 @@
         <p>After execution of all phases, each player receives a new board state, and the game proceeds to the next turn.</p>
 
         <h3>Challenges</h3>
-        <p>Since each ant on the board is moved at the end of every turn, the player is in effect controlling multiple agents (one agent per ant). Not only that, the number of agents is not fixed &mdash; as the game progresses, the number of ants in on the board will increase. Multi-agent RL is a challenging problem which is still in its nascent stages of research.</p>
+        <p>Since each ant on the board is moved at the end of every turn, the player is in effect controlling multiple agents (one agent per ant). Not only that, the number of agents is not fixed &mdash; as the game progresses, the number of ants on the board will increase. Multi-agent RL is a challenging problem which is still in its nascent stages of research.</p>
         <p>All entries to the competition so far have been implementations of min-max and the A* algorithm. There has been no attempt so far to use a trained bot to play the game.</p>
         <p>This allows us to work on something novel and challenging. At the same time the computationally simple nature of the game provides a feasible problem to work on.</p>
 
@@ -90,7 +90,7 @@
             <figcaption>The maps used for both training and testing throughout this project. The left map is of size <code>43 x 39</code>, while the map on the right is of size <code>110 x 114</code>.</figcaption>
         </d-figure>
 
-        <p>Henceforth, the map on the left will be called <code>Map1</code>, while the map on the right will be call <code>Map2</code> in the rest of this post.</p>
+        <p>Henceforth, the map on the left will be called <code>Map1</code>, while the map on the right will be called <code>Map2</code> in the rest of this post.</p>
 
         <p>A common vocabulary used to define problems in the RL landscape are:</p>
         <ul>
@@ -105,7 +105,7 @@
         <d-figure class="l-page">
             <div id="state-diag">
                 <img src="assets/images/full.png">
-                <ul>
+                <ul id="state-channels">
                     <li id="visibility-channel">Visibility Channel: <code>True</code> if the cell is visible to the agent</li>
                     <li id="land-channel">Land Channel: <code>True</code> if the the cell is water, <code>False</code> if land</li>
                     <li id="food-channel">Food Channel: <code>True</code> if the cell has food</li>
