@@ -89,3 +89,7 @@ d-figure>img {
     width: 50%;
 }
 
+#state-channels {
+    cursor: pointer;
+}
+
