@@ -97,7 +97,7 @@
             <li><em>State Space:</em> The set of all states that the game can take, and</li>
             <li><em>Action Space:</em> The set of all possible actions that can be ever taken</li>
         </ul>
-        <p>This vocabulary is also used to describe problems abstractly by <a href="https://gym.openai.com/">OpenAI Gym</a>, the popular toolkit for developing and comparing reinforcement learning algorithms. Therefore, we formulated our game using the same vocabulary in order to leverage existing work on RL.</p>
+        <p>This vocabulary is also used to describe problems abstractly by <a href="https://gym.openai.com/">OpenAI Gym</a>, the popular toolkit for developing and comparing reinforcement learning algorithms. Therefore, we formulated our game using the same vocabulary in order to leverage existing work on RL. We created an OpenAi Gym environment for the game as described below.</p>
 
         <h3>Game State</h3>
         <p>Given a game board of height <code>H</code> and width <code>W</code>, there are a number aspects on the board (like visible area, food positions, etc.) which the game state needs to capture. Using an image of the game board would be unnecessarily complicated. Instead, the game board can be described as a byte tensor <code>S</code> of the shape <code>(7, H, W)</code> where the seven channels describe different board features.</p>
@@ -117,6 +117,8 @@
             </div>
             <figcaption>State description of example game board from the perspective of the orange player. Black color represents a value of <code>1</code> / <code>True</code>, while white depicts <code>0</code> / <code>False</code>; except in the visibility channel in which white depicts the visible cells.</figcaption>
         </d-figure>
+
+        <p>Not depicted in the above visual is another channel which is <code>True/1</code> in cells in which the ants have died in the previous turn.</p>
 
         <h3>Action Space</h3>
         <p>In order to avoid dealing with a changing action space (which changes with the number of ants on the board), we instead use a constant action space tensor <code>A</code> of the shape <code>(H, W)</code>. The values in <code>A[h, w]</code> can be one of <code>north (1)</code>, <code>south (2)</code>, <code>east (3)</code>, <code>west (4)</code>, and <code>none (0)</code>. The values describe the direction in which the ant in cell <code>(h, w)</code> should move. <code>none (0)</code> is used in cells without any ant, and for ants which shouldn't move.</p>
