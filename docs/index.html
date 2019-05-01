@@ -21,23 +21,23 @@
             "authors": [{
                 "author": "Anurima Padwal",
                 "authorURL": "https://www.linkedin.com/in/anurima-padwal-433260135/",
-                "affiliation": ""
+                "affiliation": "USC"
             }, {
                 "author": "Apoorva KH",
                 "authorURL": "https://www.linkedin.com/in/apoorvakh/",
-                "affiliation": ""
+                "affiliation": "USC"
             }, {
                 "author": "Arunkumar Rajendran",
                 "authorURL": "https://www.linkedin.com/in/arunkumar-rajendran/",
-                "affiliation": ""
+                "affiliation": "USC"
             }, {
                 "author": "Dhanya Raghu",
                 "authorURL": "https://www.linkedin.com/in/dhanya-raghu/",
-                "affiliation": ""
+                "affiliation": "USC"
             }, {
                 "author": "Likhit Dharmapuri",
                 "authorURL": "https://www.linkedin.com/in/likhitd",
-                "affiliation": ""
+                "affiliation": "USC"
             }]
         }</script>
 
@@ -158,7 +158,7 @@
         </ol>
 
         <d-figure class="l-screen">
-            <video id="poster-vid" src="assets/videos/allbots2.mp4" autoplay mute controls loop preload="auto"></video>
+            <video src="assets/videos/allbots2.mp4" autoplay mute controls loop preload="auto"></video>
             <figcaption>A game of each of the mentioned bots against each other. Yellow is the winner bot, orange is the random bot, pink is the hunter bot, and blue is the greedy bot.</figcaption>
         </d-figure>
 
@@ -370,10 +370,11 @@
             </table>
             <figcaption>The table depicts the percentage of wins, losses, ties, and the average number of turns per game for the trained DQN bots against the baseline bots on <code>Map2</code>. Each player pairing was played 10 times on each map.</figcaption>
         </d-figure>
-        <br>
-        <p></p>
-        {Video of side by side game play against random bot. Left video is DQN without any training. Right is trained DQN.}
-        <br>
+
+        <d-figure class="l-page">
+            <video src="assets/videos/dqn-compare.mp4" autoplay mute controls loop preload="auto"></video>
+            <figcaption>Comparison of the untrained DQN network (on left) and trained DQN network (right) vs the <code>GreedyBot</code> (blue player). Depicted is the <code>Affiliate</code> bot Through training we are able to go from a swift defeat to a major victory.</figcaption>
+        </d-figure>
 
         <p>
             The results are tabulated for DQN architecture for different reward functions.
@@ -497,7 +498,7 @@
         </d-figure>
 
         <d-figure>
-            <video id="poster-vid" src="assets/videos/a2c-compare.mp4" autoplay mute controls loop preload="auto"></video>
+            <video src="assets/videos/a2c-compare.mp4" autoplay mute controls loop preload="auto"></video>
             <figcaption>Comparison of the untrained policy network (on left) and trained policy network (right) vs the <code>GreedyBot</code> (blue player). Through training we are able to go from a swift defeat to a major victory.</figcaption>
         </d-figure>
 

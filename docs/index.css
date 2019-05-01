@@ -11,7 +11,7 @@ d-figure>figcaption {
     padding-bottom: 1em;
 }
 
-#poster-vid {
+d-figure video {
     display: block;
     padding: 1em 0 1em 0;
     margin-left: auto;

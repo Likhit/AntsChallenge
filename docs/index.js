@@ -50,4 +50,20 @@ window.addEventListener('load', function() {
         channelImg.src = "assets/images/enemy_ant.png";
         setActive(enemyAntChannel);
     });
+
+    setTimeout(function() {
+        let elems = [].slice.call(document.querySelectorAll('h3+p>em'));
+        let elem = elems.filter(x => x.innerHTML == "Not published yet.")[0];
+        elem.innerHTML = "30th March 2019";
+    }, 500);
+
+    setTimeout(function() {
+        let elems = [].slice.call(document.querySelectorAll('h3+p>em'));
+        let elem = elems.filter(x => x.innerHTML == "No DOI yet.")[0];
+        elem.innerHTML = "NanNanNanNanBellman!";
+
+        elems = [].slice.call(document.querySelectorAll('d-byline h3'));
+        elem = elems.filter(x => x.innerHTML == "DOI")[0];
+        elem.innerHTML = "Team";
+    }, 500);
 });
