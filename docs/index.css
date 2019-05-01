@@ -55,3 +55,15 @@ li em {
     background-color: aliceblue;
 }
 
+table {
+    text-align: center;
+}
+
+d-figure table th {
+    text-align: center;
+}
+
+.right-border {
+    border-right: 1px solid rgba(0, 0, 0, 0.2);
+}
+

@@ -47,7 +47,7 @@
         <h1>Using Deep Reinforcement Learning to Play Ants</h1>
         <p>Ants is a multiplayer turn based capture-the-hill board game. Here we attempt to train a bot to play the game using deep reinforcement learning.</p>
         <d-figure class="l-screen">
-            <video id="poster-vid" src="assets/videos/winnergame.mp4" autoplay controls loop preload="auto" playbackRate="3"></video>
+            <video id="poster-vid" src="assets/videos/winnergame.mp4" autoplay mute controls loop preload="auto" playbackRate="3"></video>
             <figcaption>
                 An example of the ants game with 7 players. Each player starts with two ant hills in this game.
             </figcaption>
@@ -90,6 +90,8 @@
             <figcaption>The maps used for both training and testing throughout this project. The left map is of size <code>43 x 39</code>, while the map on the right is of size <code>110 x 114</code>.</figcaption>
         </d-figure>
 
+        <p>Henceforth, the map on the left will be called <code>Map1</code>, while the map on the right will be call <code>Map2</code> in the rest of this post.</p>
+
         <p>A common vocabulary used to define problems in the RL landscape are:</p>
         <ul>
             <li><em>State Space:</em> The set of all states that the game can take, and</li>
@@ -127,7 +129,7 @@
         <h3>Rewards</h3>
         <p>A reward of <code>1</code> is obtained every time an enemy ant hill is razed, and a penalty of <code>-1</code> is incurred when the player's ant hill is razed. Such a reward is very sparse since most games go on for a few hundred turns. In order to augment the score, we have developed a number of other reward functions.</p>
 
-        {Table with the reward functions}
+        {List with the reward functions}
 
         <p>The new reward functions all have the ability to provide rewards for each ant rather than the whole board state. Depending on the mode of training, we might choose to use this distributed reward, or the total state reward.</p>
 
@@ -137,26 +139,200 @@
         <h3>Baselines</h3>
         <p>In order to test the performance of our bots we played our bots against a number of simpler bots.
 
+        <br>
         {Table for each bot: Random, Hunter, Greedy, and Xanthis}
+        <br>
+        {Videos for gameplay}
+        <br>
 
         In order to discount for randomness of the game (eg. food spawn rate, etc.) we run the trained bots multiple times against each one of the baseline bots.</p>
 
         <h3>DQN</h3>
-        <p>Reinforcement Learning is a technique in which an agent attempts to learn an optimal policy based on its interactions with the environment. At each time step, the agent observes a state \(s\), chooses an action \(a\) to perform on the state, obtains a reward \(r\), and transitions to a new state \(\hat{s}\). Q-learning is an approach in which we incrementally estimate the “value” of performing an action \(a\) in state \(s\) by updating the following rule:
-            $$ Q(s, a) = Q(s, a) + \alpha \cdot (r + \gamma \cdot max_{\hat{a}} Q(\hat{s}, \hat{a}) - Q(s, a)) $$
+        <p>Reinforcement Learning is a technique in which an agent attempts to learn an optimal policy based on its interactions with the environment. At each time step, the agent observes a state \(S\), chooses an action \(A\) to perform on the state, obtains a reward \(R\), and transitions to a new state \(\hat{S}\). Q-learning is an approach in which we incrementally estimate the “value” of performing an action \(A\) in state \(S\) by updating the following rule:
+            $$ Q(S, A) = Q(S, A) + \alpha \cdot (R + \gamma \cdot max_{\hat{A}} Q(\hat{S}, \hat{A}) - Q(S, A)) $$
         </p>
 
-        <p>Here, \(Q(s, a)\) represents the quality of taking an action \(a\) in state \(s\). Q-learning can be extended to deep reinforcement learning frameworks by using a neural network as a function approximator \(Q(s, a|\theta)\) where \(\theta\) represents the weights of the network that parametrize the Q values. The weights of the neural network are updated by minimizing the loss function:
-            $$ L(s, a|\theta_{i}) = ((r + \gamma \cdot max_{\hat{a}} Q(\hat{s}, \hat{a})) - Q(s, a))^2 $$
+        <p>Here, \(Q(S, A)\) represents the quality of taking an action \(A\) in state \(S\). Q-learning can be extended to deep reinforcement learning frameworks by using a neural network as a function approximator \(Q(S, A|\theta)\) where \(\theta\) represents the weights of the network that parametrize the Q values. The weights of the neural network are updated by minimizing the loss function:
+            $$ L(S, A|\theta_{i}) = ((R + \gamma \cdot max_{\hat{A}} Q(\hat{S}, \hat{A})) - Q(S, A))^2 $$
         </p>
 
-        {Short para on your network arch (NOTE: you say you use huber loss, but the above loss function is MSE). Don't bother with experience replay and target network. They are both standard. Just mention it and give a citatation.}
+        {Short para on your network arch (NOTE: you say you use huber loss, but the above loss function is MSE). Don't bother with experience replay and target network. They are both standard. Just mention it and give a citation.}
 
         <br>
         {NN diagram}
 
         <h4>Result</h4>
-        {Result table of training for each combination of the reward function used}
+        <d-figure>
+            <table>
+                <tr>
+                    <th rowspan="2" class="right-border"></th>
+                    <th colspan="4" class="right-border">RandomBot</th>
+                    <th colspan="4" class="right-border">HunterBot</th>
+                    <th colspan="4">GreedyBot</th>
+                </tr>
+                <tr>
+                    <th>Wins</th>
+                    <th>Losses</th>
+                    <th>Ties</th>
+                    <th class="right-border">#Turns</th>
+                    <th>Wins</th>
+                    <th>Losses</th>
+                    <th>Ties</th>
+                    <th class="right-border">#Turns</th>
+                    <th>Wins</th>
+                    <th>Losses</th>
+                    <th>Ties</th>
+                    <th>#Turns</th>
+                </tr>
+                <tr>
+                    <th class="right-border">Simple</th>
+                    <td>100%</td>
+                    <td>0%</td>
+                    <td>0%</td>
+                    <td class="right-border">88</td>
+                    <td>90%</td>
+                    <td>0%</td>
+                    <td>10%</td>
+                    <td class="right-border">146</td>
+                    <td>90%</td>
+                    <td>0%</td>
+                    <td>10%</td>
+                    <td>130</td>
+                </tr>
+                <tr>
+                    <th class="right-border">Collision</th>
+                    <td>100%</td>
+                    <td>0%</td>
+                    <td>0%</td>
+                    <td class="right-border">431</td>
+                    <td>80%</td>
+                    <td>0%</td>
+                    <td>20%</td>
+                    <td class="right-border">475</td>
+                    <td>90%</td>
+                    <td>0%</td>
+                    <td>10%</td>
+                    <td>509</td>
+                </tr>
+                <tr>
+                    <th class="right-border">Die</th>
+                    <td>100%</td>
+                    <td>0%</td>
+                    <td>0%</td>
+                    <td class="right-border">431</td>
+                    <td>80%</td>
+                    <td>0%</td>
+                    <td>20%</td>
+                    <td class="right-border">475</td>
+                    <td>90%</td>
+                    <td>0%</td>
+                    <td>10%</td>
+                    <td>509</td>
+                </tr>
+                <tr>
+                    <th class="right-border">Double</th>
+                    <td>100%</td>
+                    <td>0%</td>
+                    <td>0%</td>
+                    <td class="right-border">431</td>
+                    <td>80%</td>
+                    <td>0%</td>
+                    <td>20%</td>
+                    <td class="right-border">475</td>
+                    <td>90%</td>
+                    <td>0%</td>
+                    <td>10%</td>
+                    <td>509</td>
+                </tr>
+            </table>
+            <figcaption>The table depicts the percentage of wins, losses, ties, and the average number of turns per game for the trained DQN bots against the baseline bots on <code>Map1</code>. Each player pairing was played 10 times on each map.</figcaption>
+        </d-figure>
+
+        <d-figure>
+            <table>
+                <tr>
+                    <th rowspan="2" class="right-border"></th>
+                    <th colspan="4" class="right-border">RandomBot</th>
+                    <th colspan="4" class="right-border">HunterBot</th>
+                    <th colspan="4">GreedyBot</th>
+                </tr>
+                <tr>
+                    <th>Wins</th>
+                    <th>Losses</th>
+                    <th>Ties</th>
+                    <th class="right-border">#Turns</th>
+                    <th>Wins</th>
+                    <th>Losses</th>
+                    <th>Ties</th>
+                    <th class="right-border">#Turns</th>
+                    <th>Wins</th>
+                    <th>Losses</th>
+                    <th>Ties</th>
+                    <th>#Turns</th>
+                </tr>
+                <tr>
+                    <th class="right-border">Simple</th>
+                    <td>100%</td>
+                    <td>0%</td>
+                    <td>0%</td>
+                    <td class="right-border">88</td>
+                    <td>90%</td>
+                    <td>0%</td>
+                    <td>10%</td>
+                    <td class="right-border">146</td>
+                    <td>90%</td>
+                    <td>0%</td>
+                    <td>10%</td>
+                    <td>130</td>
+                </tr>
+                <tr>
+                    <th class="right-border">Collision</th>
+                    <td>100%</td>
+                    <td>0%</td>
+                    <td>0%</td>
+                    <td class="right-border">431</td>
+                    <td>80%</td>
+                    <td>0%</td>
+                    <td>20%</td>
+                    <td class="right-border">475</td>
+                    <td>90%</td>
+                    <td>0%</td>
+                    <td>10%</td>
+                    <td>509</td>
+                </tr>
+                <tr>
+                    <th class="right-border">Die</th>
+                    <td>100%</td>
+                    <td>0%</td>
+                    <td>0%</td>
+                    <td class="right-border">431</td>
+                    <td>80%</td>
+                    <td>0%</td>
+                    <td>20%</td>
+                    <td class="right-border">475</td>
+                    <td>90%</td>
+                    <td>0%</td>
+                    <td>10%</td>
+                    <td>509</td>
+                </tr>
+                <tr>
+                    <th class="right-border">Double</th>
+                    <td>100%</td>
+                    <td>0%</td>
+                    <td>0%</td>
+                    <td class="right-border">431</td>
+                    <td>80%</td>
+                    <td>0%</td>
+                    <td>20%</td>
+                    <td class="right-border">475</td>
+                    <td>90%</td>
+                    <td>0%</td>
+                    <td>10%</td>
+                    <td>509</td>
+                </tr>
+            </table>
+            <figcaption>The table depicts the percentage of wins, losses, ties, and the average number of turns per game for the trained DQN bots against the baseline bots on <code>Map2</code>. Each player pairing was played 10 times on each map.</figcaption>
+        </d-figure>
         <br>
         {Video of side by side game play against random bot. Left video is DQN without any training. Right is trained DQN.}
         <br>
@@ -164,10 +340,113 @@
 
 
         <h3>Supervised Training + A2C</h3>
+        <p>The <em>A2C</em> or Advantage Actor Critic algorithms are a set of policy gradient methods. The agent has two parts, the <strong>actor</strong> i.e. the policy network which learns the probability with which each action should be taken, and the <strong>critic</strong> i.e. the value function which estimates the value of each state. The critic is used to compare against the actual reward obtained by the agent; the difference which is the error is then used to update both the actor as well as the critic.</p>
 
-        <h3>Concluding Remarks</h3>
+        <p>So far, we have been trying to learn the actions for all ants on the board in one shot. As described earlier, this is an extremely hard function to learn. In order to offset this problem, we instead try to train a network which learns the best action for each ant separately.</p>
 
-        <h2>Future Work</h2>
+        <p>In order to do so, given a game state \(S\), we decompose \(S\) into a sub-state \(s_i\) for each ant \(i\) in \(S\). This is done by taking a square centered around each any \(i\).</p>
+
+        {Figure to describe sub state creation.} <br>
+
+        <p>Once we have our sub states, we define our policy \(\pi(s_i, \theta_{\pi})\) which returns an action \(a_i\) for the ant \(i\). Similarly, our value function is defined as \(Q(s_i, a_i)\) which returns the reward \(r_i\) obtained by performing action \(a_i\) on ant \(i\).</p>
+
+        <p>We attempt to learn the policy and value function using the following networks.</p>
+        {Insert network diag} <br>
+
+        <p>The training technique described in this section is heavily inspired from the AlphaGo paper. The training of the bot goes through two phases.</p>
+
+        <h4>Supervised training</h4>
+        <p>In this stage, we learn a policy and value function from generated training data. The training data is generated by playing the <code>RandomBot</code>, <code>HunterBot</code>, <code>GreedyBot</code>, and the <code>WinnerBot</code> against each other multiple times on <code>Map1</code>, and <code>Map2</code>. For each turn of every game, we store the current state \(S\), action taken \(A\), and reward earned \(R\) by each player. The total data collected is broken an \(80/20\) train/test split.</p>
+
+        <h5>Policy network training</h5>
+        <p>The network is trained only on samples generated by the <code>WinnerBot</code>. Given the state we decompose it into a set of sub-states, and try to predict the action taken taken by the winner bot for the ant in that sub-state. We use <code>cross-entropy</code> loss for the weight update.</p>
+
+        <h5>Value network training</h5>
+        <p>In order to train the value network, we use both the <code>FoodReward</code> as well as the game scores. We do not restrict the training data in any way. We obtain the game score for non-final turns by discounting the final score obtained in a gameplay by a factor or \(0.999\). This discounted score is called the turn score. For each sub-state of a state, the network tries to predict both the food gathered by the ant in the sub-state, as well as the turn score for the whole state. <d-footnote>We also tried to learn \(\frac{1}{N} \cdot turnscore\) (where \(N\) is number of ants) instead of learning the full turnscore, but that didn't perform as well.</d-footnote> Through experimentation we found that trying to predict the food reward of each ant had a regularizing effect on the training of the value function. Huber loss was used for the weight update.</p>
+
+        <h4>A2C</h4>
+        <p>Finally, we use A2C in order to fine tune the policy and value networks. We obtain the game action \(A\), and estimated reward \(R\) using the equation:
+            $$
+            \forall_{c \in (\text{cells in S})} A[c] =
+            \begin{cases}
+                \pi(s_c, \theta_{\pi}), & \text{if}\ c\ \text{contains an ant} \\
+                0, & \text{otherwise}
+            \end{cases}
+            $$
+            $$
+            R_{score} = \frac{1}{N} \cdot \sum\limits_{i=1}^N Q_{score}(s_i, a_i) \text{ where N is the number of ants in state} \ S
+            $$
+            $$
+            R_{food} = \sum\limits_{i=1}^N Q_{food}(s_i, a_i) \text{ where N is the number of ants in state} \ S
+            $$
+        </p>
+
+        <p>Each turn is played using \(A\). The Q-values obtained by the value network predict both the turn score, and the food gathered, hence we obtain two different rewards \(R_{food}\) and \(R_{score}\)<d-footnote>As mentioned in footnote 1, using two rewards had better performance than just using the score. We suspect this is because \(R_{food}\) is a short term reward, while \(R_{score}\) is a long term reward. Using both together balances the total reward.</d-footnote>. The net loss for the critic is given by:
+            $$ L = MSE(R_{food}, \text{actual food collected}) + MSE(R_{score}, \text{actual turn score}) $$
+        </p>
+
+        <h4>Results</h4>
+        <d-figure>
+            <table>
+                <tr>
+                    <th rowspan="2" class="right-border"></th>
+                    <th colspan="4" class="right-border">RandomBot</th>
+                    <th colspan="4" class="right-border">HunterBot</th>
+                    <th colspan="4">GreedyBot</th>
+                </tr>
+                <tr>
+                    <th>Wins</th>
+                    <th>Losses</th>
+                    <th>Ties</th>
+                    <th class="right-border">#Turns</th>
+                    <th>Wins</th>
+                    <th>Losses</th>
+                    <th>Ties</th>
+                    <th class="right-border">#Turns</th>
+                    <th>Wins</th>
+                    <th>Losses</th>
+                    <th>Ties</th>
+                    <th>#Turns</th>
+                </tr>
+                <tr>
+                    <th class="right-border">Map1</th>
+                    <td>100%</td>
+                    <td>0%</td>
+                    <td>0%</td>
+                    <td class="right-border">88</td>
+                    <td>90%</td>
+                    <td>0%</td>
+                    <td>10%</td>
+                    <td class="right-border">146</td>
+                    <td>90%</td>
+                    <td>0%</td>
+                    <td>10%</td>
+                    <td>130</td>
+                </tr>
+                <tr>
+                    <th class="right-border">Map2</th>
+                    <td>100%</td>
+                    <td>0%</td>
+                    <td>0%</td>
+                    <td class="right-border">431</td>
+                    <td>80%</td>
+                    <td>0%</td>
+                    <td>20%</td>
+                    <td class="right-border">475</td>
+                    <td>90%</td>
+                    <td>0%</td>
+                    <td>10%</td>
+                    <td>509</td>
+                </tr>
+            </table>
+            <figcaption>The table depicts the percentage of wins, losses, ties, and the average number of turns per game for the trained A2C bot against the baseline bots on <code>Map1</code> and <code>Map2</code>. Each player pairing was played 10 times on each map.</figcaption>
+        </d-figure>
+
+        {Add video comparison} <br>
+
+        <p>Our bot gets major wins against the <code>Random</code>, <code>Hunter</code>, and <code>Greedy</code> bots. However, despite the wins, it still gets completely destroyed against the <code>Winner</code> bot.</p>
+
+        <p>There is still a long way to go to be able to beat an A* implementation of the bot. One other major cause of concern is that the current trained bots learn to play only on the specified maps. On testing with unseen randomly generated maps, the A2C bot is unable to conclusively beat even the <code>Random</code> bot. This indicates that work must be done to generate generic features of the game state which will remain valid across all maps.</p>
 
     </d-article>
     <d-appendix>
