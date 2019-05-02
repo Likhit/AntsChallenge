@@ -368,6 +368,11 @@
             <figcaption>The table depicts the percentage of wins, losses, ties, and the average number of turns per game for the trained DQN bots against the baseline bots on <code>Map2</code>. Each player pairing was played 10 times on each map.</figcaption>
         </d-figure>
 
+        <d-figure class="l-page">
+            <video src="assets/videos/dqn-compare2.mp4" autoplay mute controls loop preload="auto"></video>
+            <figcaption>Comparison of the untrained DQN network (on left) and trained DQN network (right) vs the <code>GreedyBot</code> (blue player). Depicted is the <code>Affiliate</code> bot Through training we are able to go from a swift defeat to a major victory.</figcaption>
+        </d-figure>
+
         <p>The results are tabulated for DQN architecture for different reward functions. Collision and die rewards individually perform better than the aggregate; as the agent will not be able to focus simultaneously on different rewards as they gets neutralized. The model performs best against random bot for both maps. Overall, our agents perform better on <code>Map2</code> because <code>Map2</code> is bigger than <code>Map1</code>, thus giving more area of land for the agent ants to explore and reducing the rate of collision amongst them.</p>
 
         <p>Given that we are also trying to learn the actions for all ants on the board in one shot, it is understandable that the DQN algorithm isn't performing well. The \(Q\) function described here is an extremely hard function to learn. For a board state with \(n\) ants, the network must find the optimal value combination out of a total of \(5^n\) possible combinations.</p>
